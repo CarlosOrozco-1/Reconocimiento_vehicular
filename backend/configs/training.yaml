@@ -1,0 +1,14 @@
+data:
+  dataset_yaml: data/annotations/dataset.yaml
+
+train:
+  model: yolo11n.pt
+  epochs: 80
+  imgsz: 960
+  batch: 8
+  device: cpu
+  project: models/trained/detection
+  name: vehicle_counter_ft
+
+validation:
+  split: val

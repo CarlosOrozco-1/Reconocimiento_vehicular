@@ -1,0 +1,10 @@
+path: data/annotations
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: motorcycle
+  1: car
+  2: bus
+  3: truck

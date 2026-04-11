@@ -1,0 +1,24 @@
+project:
+  name: vehicle-counter-yolo
+  timezone: America/Guatemala
+
+paths:
+  source_video: data/raw/videos/test.mp4
+  events_csv: outputs/csv/events.csv
+  daily_csv: outputs/csv/daily_counts.csv
+
+counting:
+  line:
+    x1: 100
+    y1: 400
+    x2: 1200
+    y2: 400
+  allowed_classes:
+    - motorcycle
+    - car
+    - bus
+    - truck
+  vehicle_group:
+    - car
+    - bus
+    - truck

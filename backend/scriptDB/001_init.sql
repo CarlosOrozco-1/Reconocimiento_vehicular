@@ -1,0 +1,2 @@
+-- Create project database (run as postgres superuser if needed)
+-- CREATE DATABASE traffic_gt;

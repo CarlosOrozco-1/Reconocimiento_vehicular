@@ -1,0 +1,17 @@
+model:
+  weights: yolo11n.pt
+  imgsz: 960
+
+inference:
+  conf: 0.35
+  iou: 0.45
+  device: cpu
+  classes:
+    - 2
+    - 3
+    - 5
+    - 7
+
+tracking:
+  tracker: bytetrack.yaml
+  persist: true

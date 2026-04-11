@@ -1,0 +1,42 @@
+from __future__ import annotations
+
+
+def mock_routes_geojson() -> dict:
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"id": 1, "route_code": "CA-1", "name": "CA-1 Occidente"},
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[-90.733, 14.62], [-91.48, 14.78]],
+                },
+            },
+            {
+                "type": "Feature",
+                "properties": {"id": 2, "route_code": "CA-9", "name": "CA-9 Sur"},
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[-90.506, 14.634], [-90.33, 14.28]],
+                },
+            },
+        ],
+    }
+
+
+def mock_peak_hours() -> list[dict]:
+    return [
+        {
+            "route_code": "CA-1",
+            "route_name": "CA-1 Occidente",
+            "peak_hour": 7,
+            "avg_flow": 980,
+        },
+        {
+            "route_code": "CA-9",
+            "route_name": "CA-9 Sur",
+            "peak_hour": 17,
+            "avg_flow": 1220,
+        },
+    ]

@@ -1,0 +1,72 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --line: #1f2937;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  color: var(--text);
+  min-height: 100%;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(2, 6, 23, 0.85);
+}
+
+.brand {
+  font-weight: 700;
+}
+
+.nav-link {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.nav-link.active {
+  color: var(--text);
+  background: #1e293b;
+}
+
+.page {
+  padding: 16px 20px;
+}
+
+.panel {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.map-container {
+  width: 100%;
+  height: calc(100vh - 180px);
+  min-height: 420px;
+  border-radius: 10px;
+  overflow: hidden;
+}
