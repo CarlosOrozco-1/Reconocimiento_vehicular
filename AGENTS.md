@@ -35,6 +35,10 @@ Reglas de desarrollo para el proyecto Vehicle Counter YOLO.
 
 Toda documentacion del proyecto debe crearse dentro de `docs/`.
 
+## Regla para endpoints y pruebas API
+
+Cada vez que se agregue, modifique o elimine un endpoint del backend, se debe actualizar la coleccion de Postman en `docs/postman/traffic_map_guatemala.postman_collection.json`.
+
 ## Entorno de trabajo (Distrobox)
 
 1. Crear entorno Ubuntu 22.04:

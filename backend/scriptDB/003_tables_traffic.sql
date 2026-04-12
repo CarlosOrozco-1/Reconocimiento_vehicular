@@ -8,6 +8,14 @@ CREATE TABLE IF NOT EXISTS road_segments (
     CONSTRAINT uq_road_segments_route_name UNIQUE (route_code, name)
 );
 
+CREATE TABLE IF NOT EXISTS departments (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(120) NOT NULL,
+    geom geometry(MULTIPOLYGON, 4326) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS count_points (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,

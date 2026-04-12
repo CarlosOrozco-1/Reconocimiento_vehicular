@@ -16,6 +16,10 @@ Plan de trabajo oficial por fases:
 - `docs/arquitectura_backend_fase1.md`
 - `docs/cambios_recientes.md`
 - `docs/despliegue_caddy.md`
+- `docs/git_workflow.md`
+- `docs/conexion_dbeaver.md`
+- `docs/postman/traffic_map_guatemala.postman_collection.json`
+- `docs/rutas_departamentos_mapa.md`
 
 ## Entorno (Fedora + Distrobox)
 

@@ -16,6 +16,20 @@ export class TrafficApiService {
     );
   }
 
+  getDepartments(): Observable<{ source: string; data: Record<string, unknown> }> {
+    return this.http.get<{ source: string; data: Record<string, unknown> }>(
+      `${this.baseUrl}/departments`
+    );
+  }
+
+  getRouteDepartments(
+    routeCode: string
+  ): Observable<{ source: string; data: Array<Record<string, unknown>> }> {
+    return this.http.get<{ source: string; data: Array<Record<string, unknown>> }>(
+      `${this.baseUrl}/routes/${routeCode}/departments`
+    );
+  }
+
   getPeakHours(): Observable<{ source: string; data: Array<Record<string, unknown>> }> {
     return this.http.get<{ source: string; data: Array<Record<string, unknown>> }>(
       `${this.baseUrl}/peak-hours`
@@ -28,5 +42,9 @@ export class TrafficApiService {
 
   peakHoursUrl(): string {
     return `${this.baseUrl}/peak-hours`;
+  }
+
+  departmentsUrl(): string {
+    return `${this.baseUrl}/departments`;
   }
 }

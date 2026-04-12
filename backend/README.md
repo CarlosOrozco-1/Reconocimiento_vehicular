@@ -35,6 +35,28 @@ source /home/ceorozcom/Documents/Proyecto-Reconocimiento-Vehicular/.venv/bin/act
 ./scripts/run_api.sh
 ```
 
+Nota importante: el backend no usa `npm`. Se levanta con Python/FastAPI (`uvicorn`).
+
+Configuracion recomendada en `backend/.env`:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_PORT=55432
+```
+
+## Troubleshooting rapido
+
+Si ejecutas `npm start` dentro de `backend/`, fallara porque no existe `package.json`.
+
+- Backend se levanta con `./scripts/run_api.sh`
+- Frontend se levanta desde `frontend/` con `npm run start`
+
+Si el mapa solo muestra color base:
+
+1. Verifica API: `curl http://localhost:8000/health`
+2. Verifica rutas: `curl http://localhost:8000/routes/main`
+3. Verifica departamentos: `curl http://localhost:8000/departments`
+
 ## Base de datos
 
 Scripts SQL en `scriptDB/` para Postgres + PostGIS.
@@ -54,6 +76,12 @@ cd /home/ceorozcom/Documents/Proyecto-Reconocimiento-Vehicular/backend
 cp .env.example .env
 ./scripts/db_up.sh
 ```
+
+Nota: si ejecutas desde Distrobox, el script usa `distrobox-host-exec` para invocar Podman del host.
+
+Conexion con DBeaver:
+
+- Ver `docs/conexion_dbeaver.md`
 
 Detener base:
 

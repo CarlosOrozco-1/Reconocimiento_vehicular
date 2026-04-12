@@ -17,6 +17,8 @@ Levantar la base geoespacial del sistema:
   - `GET /health`
   - `GET /routes/main`
   - `GET /peak-hours`
+  - `GET /departments`
+  - `GET /routes/{route_code}/departments`
 
 2. Configuracion
 
@@ -52,10 +54,12 @@ Scripts en `backend/scriptDB/`:
 - `003_tables_traffic.sql`
 - `004_indexes.sql`
 - `005_seed_routes.sql`
+- `006_seed_departments.sql`
 
 Tablas iniciales:
 
 - `road_segments`
+- `departments`
 - `count_points`
 - `traffic_counts`
 - `traffic_hourly_agg`

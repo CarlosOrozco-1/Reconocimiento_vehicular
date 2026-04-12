@@ -6,6 +6,7 @@ Este documento define el plan oficial del proyecto. Trabajaremos fase por fase y
 
 - Todo se ejecuta dentro del entorno aislado en Distrobox `vehicle-counter-dev`.
 - No instalar dependencias globales fuera del entorno del proyecto.
+- Flujo Git activo: ramas `desa`, `pre`, `pro` (ver `docs/git_workflow.md`).
 
 Comandos base:
 

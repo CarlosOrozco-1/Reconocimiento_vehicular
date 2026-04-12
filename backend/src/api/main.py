@@ -6,8 +6,18 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.db import healthcheck_db
-from src.api.mock_data import mock_peak_hours, mock_routes_geojson
-from src.api.repository import fetch_peak_hours, fetch_routes_geojson
+from src.api.mock_data import (
+    mock_departments_geojson,
+    mock_peak_hours,
+    mock_route_departments,
+    mock_routes_geojson,
+)
+from src.api.repository import (
+    fetch_departments_geojson,
+    fetch_peak_hours,
+    fetch_route_departments,
+    fetch_routes_geojson,
+)
 from src.api.settings import settings
 
 app = FastAPI(title="Traffic Map Guatemala API", version="0.1.0")
@@ -54,3 +64,25 @@ def get_peak_hours(
         if not settings.api_allow_mock:
             raise
         return {"source": "mock", "data": mock_peak_hours()}
+
+
+@app.get("/departments")
+def get_departments(limit: int = Query(default=500, ge=1, le=5000)) -> dict:
+    try:
+        geojson = fetch_departments_geojson(limit=limit)
+        return {"source": "db", "data": geojson}
+    except Exception:
+        if not settings.api_allow_mock:
+            raise
+        return {"source": "mock", "data": mock_departments_geojson()}
+
+
+@app.get("/routes/{route_code}/departments")
+def get_route_departments(route_code: str) -> dict:
+    try:
+        rows = fetch_route_departments(route_code=route_code)
+        return {"source": "db", "data": rows}
+    except Exception:
+        if not settings.api_allow_mock:
+            raise
+        return {"source": "mock", "data": mock_route_departments(route_code=route_code)}

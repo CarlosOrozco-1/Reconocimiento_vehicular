@@ -39,6 +39,58 @@ def fetch_routes_geojson(limit: int = 500) -> dict:
     return {"type": "FeatureCollection", "features": features}
 
 
+def fetch_departments_geojson(limit: int = 500) -> dict:
+    query = """
+        SELECT
+            id,
+            code,
+            name,
+            ST_AsGeoJSON(geom) AS geom_json
+        FROM departments
+        ORDER BY id
+        LIMIT %s
+    """
+    features: list[dict] = []
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (limit,))
+            rows = cur.fetchall()
+
+    for row in rows:
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": row["id"],
+                    "code": row["code"],
+                    "name": row["name"],
+                },
+                "geometry": json.loads(row["geom_json"]),
+            }
+        )
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+def fetch_route_departments(route_code: str) -> list[dict]:
+    query = """
+        SELECT DISTINCT
+            rs.route_code,
+            rs.name AS route_name,
+            d.code AS department_code,
+            d.name AS department_name
+        FROM road_segments rs
+        INNER JOIN departments d ON ST_Intersects(rs.geom, d.geom)
+        WHERE rs.route_code = %s
+        ORDER BY d.name
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (route_code,))
+            rows = cur.fetchall()
+    return rows
+
+
 def fetch_peak_hours(from_date: date | None, to_date: date | None) -> list[dict]:
     date_filters = []
     params: list[object] = []
