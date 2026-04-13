@@ -132,6 +132,24 @@
           ]
         }
       }
+    },
+    {
+      "name": "Route Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/routes/CA-1/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "routes",
+            "CA-1",
+            "summary"
+          ]
+        }
+      }
     }
   ]
 }

@@ -1,0 +1,5 @@
+route_code,observed_at,interval_min,motorcycle_count,light_vehicle_count,heavy_vehicle_count,total_count
+CA-1,2026-04-10T07:00:00,60,120,630,110,860
+CA-1,2026-04-10T08:00:00,60,95,540,95,730
+CA-9,2026-04-10T17:00:00,60,160,860,180,1200
+CA-9,2026-04-10T18:00:00,60,140,710,150,1000

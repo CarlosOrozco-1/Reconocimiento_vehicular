@@ -5,10 +5,11 @@
 1. El frontend carga primero los departamentos (`/departments`) como poligonos.
 2. Luego carga rutas principales (`/routes/main`) como lineas.
 3. Al hacer clic sobre una ruta, consulta `/routes/{route_code}/departments`.
-4. Se muestra popup con el nombre de la ruta y los departamentos que cruza.
-5. El usuario puede mostrar/ocultar capas con botones de control en la vista de mapa.
+4. Consulta `/routes/{route_code}/summary` para flujo normal y hora pico.
+5. En hover se muestra popup con datos de ruta y departamentos que cruza.
+6. El usuario puede mostrar/ocultar capas con botones de control en la vista de mapa.
 
-## Capas en MapLibre
+## Capas en Leaflet
 
 - `departments-fill-layer`: relleno suave de departamentos.
 - `departments-line-layer`: borde de departamentos.
@@ -19,6 +20,7 @@
 - `GET /departments`
 - `GET /routes/main`
 - `GET /routes/{route_code}/departments`
+- `GET /routes/{route_code}/summary`
 
 ## Nota de datos
 

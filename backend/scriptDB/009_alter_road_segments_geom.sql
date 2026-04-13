@@ -1,0 +1,4 @@
+ALTER TABLE road_segments
+ALTER COLUMN geom
+TYPE geometry(MULTILINESTRING, 4326)
+USING ST_Multi(geom);

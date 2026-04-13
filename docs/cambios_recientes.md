@@ -24,6 +24,22 @@ Registro rapido de cambios para no perder contexto.
   - `GET /peak-hours`
   - `GET /departments`
   - `GET /routes/{route_code}/departments`
+  - `GET /routes/{route_code}/summary`
+
+### Ingestion de datos
+
+- Pipeline multi-fuente inicial implementado (`src/ingestion/`).
+- Adaptadores iniciales: CSV y HTTP JSON.
+- Persistencia en crudo `traffic_flow_raw` y consolidacion a `traffic_hourly_agg`.
+- Scripts SQL agregados: `007_ingestion_tables.sql`, `008_ingestion_indexes.sql`.
+- Script de ejecucion: `backend/scripts/run_ingestion_csv.sh`.
+
+### Carga de capas oficiales (SEGEPLAN)
+
+- Script nuevo: `backend/scripts/load_segeplan_data.sh`.
+- Carga departamentos desde `agrip:03_Limites_departamentales`.
+- Carga rutas desde `infraestructura:carretera_centroamericana`.
+- Normalizacion de codigos de ruta aplicada (formato `CA-xx`).
 - Config de entorno en `backend/.env.example`.
 - Conexion DB y repositorio SQL en `backend/src/api/db.py` y `backend/src/api/repository.py`.
 - Datos mock para desarrollo sin DB en `backend/src/api/mock_data.py`.
@@ -47,6 +63,14 @@ Registro rapido de cambios para no perder contexto.
 - `docs/git_workflow.md` (flujo de ramas `desa`, `pre`, `pro`).
 - Coleccion Postman inicial: `docs/postman/traffic_map_guatemala.postman_collection.json`.
 - Flujo de mapa rutas/departamentos: `docs/rutas_departamentos_mapa.md`.
+- Decision de stack (Leaflet + OSMnx/GeoPandas): `docs/decision_stack_mapa.md`.
+- Guia de datos espaciales y fuentes: `docs/datos_espaciales_y_fuentes.md`.
+- Matriz de fuentes y endpoints candidatos: `docs/matriz_fuentes_trafico.md`.
+
+### Frontend mapa
+
+- Migracion de componente de mapa a Leaflet completada.
+- Hover por ruta con popup de flujo normal, flujo hora pico y departamentos.
 
 ### Git
 

@@ -88,3 +88,43 @@ Detener base:
 ```bash
 ./scripts/db_down.sh
 ```
+
+## Ingestion de datos reales (multi-fuente)
+
+Flujo recomendado:
+
+1. Capturar de fuentes externas (CSV/API).
+2. Guardar en tabla cruda `traffic_flow_raw`.
+3. Procesar y consolidar en `traffic_hourly_agg`.
+4. Exponer por API para dashboard/mapa.
+
+Ejemplo de ingestion desde CSV:
+
+```bash
+cd /home/ceorozcom/Documents/Proyecto-Reconocimiento-Vehicular/backend
+./scripts/run_ingestion_csv.sh fuente_demo ../docs/ejemplo_fuente_trafico.csv
+```
+
+Después puedes consultar:
+
+- `GET /routes/{route_code}/summary`
+- `GET /peak-hours`
+
+### Carga geoespacial desde SEGEPLAN WFS
+
+Este proyecto ya incluye carga automatizada de capas oficiales (WFS):
+
+- Departamentos: `agrip:03_Limites_departamentales`
+- Rutas centroamericanas: `infraestructura:carretera_centroamericana`
+
+Ejecutar:
+
+```bash
+cd /home/ceorozcom/Documents/Proyecto-Reconocimiento-Vehicular/backend
+./scripts/load_segeplan_data.sh all
+```
+
+Opciones:
+
+- `./scripts/load_segeplan_data.sh departments`
+- `./scripts/load_segeplan_data.sh routes`

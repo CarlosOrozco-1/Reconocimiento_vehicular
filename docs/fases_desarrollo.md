@@ -36,6 +36,7 @@ Objetivo:
 - Levantar backend con FastAPI.
 - Preparar base de datos PostgreSQL + PostGIS.
 - Crear modelo inicial para rutas, puntos de conteo y conteos por intervalo.
+- Exponer datos de rutas/departamentos para interaccion en mapa (hover/click).
 
 Entregables:
 
@@ -51,6 +52,7 @@ Objetivo:
 
 - Ingerir conteos desde vision (YOLO) o fuentes externas.
 - Consolidar agregados por hora, dia y ruta.
+- Priorizar conectores de datos publicos y documentar cobertura real por fuente.
 
 Entregables:
 
@@ -64,6 +66,7 @@ Objetivo:
 
 - Mostrar mapa de Guatemala con rutas principales.
 - Pintar flujo vehicular por segmento y filtros por fecha/hora.
+- Migrar a Leaflet para acelerar desarrollo del dashboard geoespacial.
 
 Entregables:
 

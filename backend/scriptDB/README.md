@@ -10,6 +10,9 @@ Sugerencia de organizacion:
 - `004_indexes.sql`
 - `005_seed_routes.sql`
 - `006_seed_departments.sql`
+- `007_ingestion_tables.sql`
+- `008_ingestion_indexes.sql`
+- `009_alter_road_segments_geom.sql`
 
 Orden de ejecucion recomendado:
 
@@ -18,5 +21,8 @@ Orden de ejecucion recomendado:
 3. `004_indexes.sql`
 4. `005_seed_routes.sql`
 5. `006_seed_departments.sql`
+6. `007_ingestion_tables.sql`
+7. `008_ingestion_indexes.sql`
+8. `009_alter_road_segments_geom.sql`
 
 Si la base ya fue creada antes de agregar nuevos scripts, ejecútalos manualmente con psql o DBeaver.

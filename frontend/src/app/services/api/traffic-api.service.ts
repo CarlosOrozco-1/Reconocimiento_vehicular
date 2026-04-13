@@ -30,6 +30,12 @@ export class TrafficApiService {
     );
   }
 
+  getRouteSummary(routeCode: string): Observable<{ source: string; data: Record<string, unknown> }> {
+    return this.http.get<{ source: string; data: Record<string, unknown> }>(
+      `${this.baseUrl}/routes/${routeCode}/summary`
+    );
+  }
+
   getPeakHours(): Observable<{ source: string; data: Array<Record<string, unknown>> }> {
     return this.http.get<{ source: string; data: Array<Record<string, unknown>> }>(
       `${this.baseUrl}/peak-hours`

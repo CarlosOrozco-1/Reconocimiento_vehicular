@@ -10,12 +10,14 @@ from src.api.mock_data import (
     mock_departments_geojson,
     mock_peak_hours,
     mock_route_departments,
+    mock_route_summary,
     mock_routes_geojson,
 )
 from src.api.repository import (
     fetch_departments_geojson,
     fetch_peak_hours,
     fetch_route_departments,
+    fetch_route_summary,
     fetch_routes_geojson,
 )
 from src.api.settings import settings
@@ -86,3 +88,14 @@ def get_route_departments(route_code: str) -> dict:
         if not settings.api_allow_mock:
             raise
         return {"source": "mock", "data": mock_route_departments(route_code=route_code)}
+
+
+@app.get("/routes/{route_code}/summary")
+def get_route_summary(route_code: str) -> dict:
+    try:
+        row = fetch_route_summary(route_code=route_code)
+        return {"source": "db", "data": row}
+    except Exception:
+        if not settings.api_allow_mock:
+            raise
+        return {"source": "mock", "data": mock_route_summary(route_code=route_code)}

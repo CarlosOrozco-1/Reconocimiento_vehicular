@@ -113,3 +113,21 @@ def mock_route_departments(route_code: str) -> list[dict]:
         }
         for index, name in enumerate(names, start=1)
     ]
+
+
+def mock_route_summary(route_code: str) -> dict:
+    defaults = {
+        "CA-1": {"route_name": "CA-1 Occidente", "normal_flow": 760, "peak_flow": 980, "peak_hour": 7},
+        "CA-9": {"route_name": "CA-9 Sur", "normal_flow": 910, "peak_flow": 1220, "peak_hour": 17},
+    }
+    selected = defaults.get(
+        route_code,
+        {"route_name": route_code, "normal_flow": 0, "peak_flow": 0, "peak_hour": None},
+    )
+    return {
+        "route_code": route_code,
+        "route_name": selected["route_name"],
+        "normal_flow": selected["normal_flow"],
+        "peak_flow": selected["peak_flow"],
+        "peak_hour": selected["peak_hour"],
+    }

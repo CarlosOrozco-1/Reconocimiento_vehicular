@@ -40,8 +40,14 @@ Nota: en esta etapa no se confirmo una API publica nacional/municipal de Guatema
 
 ### Frontend
 
-- Angular + MapLibre GL JS (o Leaflet si se busca simplicidad).
+- Angular + Leaflet (recomendado para acelerar el MVP).
 - Graficas con Apache ECharts o Plotly.
+
+### Procesamiento geoespacial Python
+
+- OSMnx para descarga y analisis de red vial OSM.
+- GeoPandas para manejo de departamentos y joins espaciales.
+- pyrosm como opcion para ingestion eficiente de PBF grandes.
 
 ### Infra
 
@@ -132,8 +138,9 @@ Semana 4
 
 Para este nuevo alcance, Streamlit queda corto como interfaz principal geoespacial. Recomendado:
 
-- Angular + MapLibre GL (frontend)
+- Angular + Leaflet (frontend)
 - FastAPI + PostGIS (backend/datos)
+- OSMnx + GeoPandas (procesamiento de datos geograficos)
 - Python jobs para analytics
 
 Mantener Streamlit solo como consola interna de exploracion o QA.

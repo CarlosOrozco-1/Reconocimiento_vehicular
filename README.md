@@ -2,6 +2,13 @@
 
 Proyecto de analitica de trafico para Guatemala con arquitectura por capas y separacion de servicios.
 
+Objetivo funcional actual:
+
+- visualizar rutas principales de Guatemala en mapa,
+- mostrar estadisticas de flujo vehicular normal y horas pico,
+- consultar detalle por ruta al hover/click,
+- priorizar datos de APIs publicas y complementar con datos propios.
+
 ## Estructura actual
 
 - `backend/`: API, analitica, pipelines de deteccion y base de datos.
@@ -20,6 +27,9 @@ Plan de trabajo oficial por fases:
 - `docs/conexion_dbeaver.md`
 - `docs/postman/traffic_map_guatemala.postman_collection.json`
 - `docs/rutas_departamentos_mapa.md`
+- `docs/decision_stack_mapa.md`
+- `docs/datos_espaciales_y_fuentes.md`
+- `docs/matriz_fuentes_trafico.md`
 
 ## Entorno (Fedora + Distrobox)
 

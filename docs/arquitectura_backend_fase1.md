@@ -19,6 +19,7 @@ Levantar la base geoespacial del sistema:
   - `GET /peak-hours`
   - `GET /departments`
   - `GET /routes/{route_code}/departments`
+  - `GET /routes/{route_code}/summary`
 
 2. Configuracion
 

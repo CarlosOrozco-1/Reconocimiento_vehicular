@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnDestroy } from '@angular/core';
-import maplibregl, { Map } from 'maplibre-gl';
+import { forkJoin } from 'rxjs';
+import * as L from 'leaflet';
 
 import { TrafficApiService } from '../../services/api/traffic-api.service';
 
@@ -9,7 +10,7 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
   template: `
     <section class="panel">
       <h2>Mapa de rutas principales</h2>
-      <p>Vista inicial para integrar segmentos, departamentos y flujo vehicular por hora.</p>
+      <p>Leaflet: rutas, departamentos y datos por ruta en hover.</p>
       <div class="layer-controls">
         <button type="button" class="control-btn" (click)="toggleRoutes()">
           {{ routesVisible ? 'Ocultar rutas' : 'Mostrar rutas' }}
@@ -41,32 +42,28 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
   ]
 })
 export class MapPageComponent implements AfterViewInit, OnDestroy {
-  private map: Map | null = null;
-  private readonly departmentsSourceId = 'departments-source';
-  private readonly departmentsFillLayerId = 'departments-fill-layer';
-  private readonly departmentsLineLayerId = 'departments-line-layer';
-  private readonly routesSourceId = 'routes-source';
-  private readonly routesLayerId = 'routes-layer';
+  private map: L.Map | null = null;
+  private routesLayer: L.GeoJSON | null = null;
+  private departmentsLayer: L.GeoJSON | null = null;
   routesVisible = true;
   departmentsVisible = true;
 
   constructor(private readonly trafficApi: TrafficApiService) {}
 
   ngAfterViewInit(): void {
-    this.map = new maplibregl.Map({
-      container: 'main-map',
-      style: 'https://demotiles.maplibre.org/style.json',
-      center: [-90.5069, 14.6349],
-      zoom: 7
+    this.map = L.map('main-map', {
+      center: [14.6349, -90.5069],
+      zoom: 7,
+      zoomControl: true
     });
 
-    this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(this.map);
 
-    this.map.on('load', () => {
-      this.loadDepartments();
-      this.loadRoutes();
-      this.bindRoutePopup();
-    });
+    this.loadDepartments();
+    this.loadRoutes();
   }
 
   private loadDepartments(): void {
@@ -80,40 +77,26 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
           return;
         }
 
-        if (this.map.getLayer(this.departmentsLineLayerId)) {
-          this.map.removeLayer(this.departmentsLineLayerId);
-        }
-        if (this.map.getLayer(this.departmentsFillLayerId)) {
-          this.map.removeLayer(this.departmentsFillLayerId);
-        }
-        if (this.map.getSource(this.departmentsSourceId)) {
-          this.map.removeSource(this.departmentsSourceId);
+        if (this.departmentsLayer) {
+          this.map.removeLayer(this.departmentsLayer);
         }
 
-        this.map.addSource(this.departmentsSourceId, {
-          type: 'geojson',
-          data: response.data as never
-        });
-
-        this.map.addLayer({
-          id: this.departmentsFillLayerId,
-          type: 'fill',
-          source: this.departmentsSourceId,
-          paint: {
-            'fill-color': '#0ea5e9',
-            'fill-opacity': 0.12
+        this.departmentsLayer = L.geoJSON(response.data as never, {
+          style: {
+            color: '#38bdf8',
+            weight: 1.2,
+            fillColor: '#0ea5e9',
+            fillOpacity: 0.12
+          },
+          onEachFeature: (feature, layer) => {
+            const name = String(feature.properties?.['name'] ?? 'Departamento');
+            layer.bindTooltip(name, { sticky: true });
           }
         });
 
-        this.map.addLayer({
-          id: this.departmentsLineLayerId,
-          type: 'line',
-          source: this.departmentsSourceId,
-          paint: {
-            'line-color': '#38bdf8',
-            'line-width': 1.5
-          }
-        });
+        if (this.departmentsVisible) {
+          this.departmentsLayer.addTo(this.map);
+        }
       },
       error: (err: unknown) => {
         console.error('No fue posible cargar departamentos', err);
@@ -132,27 +115,36 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
           return;
         }
 
-        if (this.map.getLayer(this.routesLayerId)) {
-          this.map.removeLayer(this.routesLayerId);
-        }
-        if (this.map.getSource(this.routesSourceId)) {
-          this.map.removeSource(this.routesSourceId);
+        if (this.routesLayer) {
+          this.map.removeLayer(this.routesLayer);
         }
 
-        this.map.addSource(this.routesSourceId, {
-          type: 'geojson',
-          data: response.data as never
-        });
+        this.routesLayer = L.geoJSON(response.data as never, {
+          style: {
+            color: '#22c55e',
+            weight: 4,
+            opacity: 0.95
+          },
+          onEachFeature: (feature, layer) => {
+            const routeCode = String(feature.properties?.['route_code'] ?? '');
+            const routeName = String(feature.properties?.['name'] ?? routeCode);
 
-        this.map.addLayer({
-          id: this.routesLayerId,
-          type: 'line',
-          source: this.routesSourceId,
-          paint: {
-            'line-color': '#22c55e',
-            'line-width': 4
+            layer.on('mouseover', (event) => {
+              const target = event.target as L.Path;
+              target.setStyle({ weight: 6, color: '#16a34a' });
+              this.openRoutePopup(routeCode, routeName, layer);
+            });
+
+            layer.on('mouseout', (event) => {
+              const target = event.target as L.Path;
+              target.setStyle({ weight: 4, color: '#22c55e' });
+            });
           }
         });
+
+        if (this.routesVisible) {
+          this.routesLayer.addTo(this.map);
+        }
       },
       error: (err: unknown) => {
         console.error('No fue posible cargar rutas principales', err);
@@ -160,80 +152,69 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private bindRoutePopup(): void {
-    if (!this.map) {
+  private openRoutePopup(routeCode: string, routeName: string, layer: L.Layer): void {
+    if (!routeCode) {
       return;
     }
 
-    this.map.on('click', this.routesLayerId, (event) => {
-      const feature = event.features?.[0];
-      const properties = (feature?.properties ?? {}) as Record<string, unknown>;
-      const routeCode = String(properties['route_code'] ?? '');
-      const routeName = String(properties['name'] ?? routeCode);
+    forkJoin({
+      departments: this.trafficApi.getRouteDepartments(routeCode),
+      summary: this.trafficApi.getRouteSummary(routeCode)
+    }).subscribe({
+      next: ({ departments, summary }) => {
+        const names = departments.data
+          .map((item) => String(item['department_name'] ?? ''))
+          .filter((item) => item.length > 0);
 
-      if (!routeCode) {
-        return;
-      }
+        const summaryData = summary.data;
+        const normalFlow = Number(summaryData['normal_flow'] ?? 0);
+        const peakFlow = Number(summaryData['peak_flow'] ?? 0);
+        const peakHour = summaryData['peak_hour'] == null ? 'N/A' : `${summaryData['peak_hour']}:00`;
 
-      this.trafficApi.getRouteDepartments(routeCode).subscribe({
-        next: (response) => {
-          const names = response.data
-            .map((item) => String(item['department_name'] ?? ''))
-            .filter((item) => item.length > 0);
-          const deptText = names.length > 0 ? names.join(', ') : 'Sin cruces disponibles';
+        const html = `
+          <strong>${routeName}</strong><br/>
+          Flujo normal: ${normalFlow} veh/h<br/>
+          Flujo hora pico: ${peakFlow} veh/h<br/>
+          Hora pico: ${peakHour}<br/>
+          Departamentos: ${names.length > 0 ? names.join(', ') : 'Sin cruces'}
+        `;
 
-          new maplibregl.Popup()
-            .setLngLat(event.lngLat)
-            .setHTML(`<strong>${routeName}</strong><br/>Departamentos: ${deptText}`)
-            .addTo(this.map!);
-        },
-        error: (err: unknown) => {
-          console.error('No fue posible cargar cruces de departamentos', err);
-        }
-      });
-    });
-
-    this.map.on('mouseenter', this.routesLayerId, () => {
-      if (this.map) {
-        this.map.getCanvas().style.cursor = 'pointer';
+        layer.bindPopup(html, { closeButton: false, autoPan: false }).openPopup();
+      },
+      error: (err: unknown) => {
+        console.error('No fue posible cargar detalle de ruta', err);
       }
     });
+  }
 
-    this.map.on('mouseleave', this.routesLayerId, () => {
-      if (this.map) {
-        this.map.getCanvas().style.cursor = '';
-      }
-    });
+  toggleRoutes(): void {
+    if (!this.map || !this.routesLayer) {
+      return;
+    }
+    this.routesVisible = !this.routesVisible;
+    if (this.routesVisible) {
+      this.routesLayer.addTo(this.map);
+    } else {
+      this.map.removeLayer(this.routesLayer);
+    }
+  }
+
+  toggleDepartments(): void {
+    if (!this.map || !this.departmentsLayer) {
+      return;
+    }
+    this.departmentsVisible = !this.departmentsVisible;
+    if (this.departmentsVisible) {
+      this.departmentsLayer.addTo(this.map);
+    } else {
+      this.map.removeLayer(this.departmentsLayer);
+    }
   }
 
   ngOnDestroy(): void {
     if (this.map) {
       this.map.remove();
-    }
-  }
-
-  toggleRoutes(): void {
-    if (!this.map) {
-      return;
-    }
-    this.routesVisible = !this.routesVisible;
-    const visibility = this.routesVisible ? 'visible' : 'none';
-    if (this.map.getLayer(this.routesLayerId)) {
-      this.map.setLayoutProperty(this.routesLayerId, 'visibility', visibility);
-    }
-  }
-
-  toggleDepartments(): void {
-    if (!this.map) {
-      return;
-    }
-    this.departmentsVisible = !this.departmentsVisible;
-    const visibility = this.departmentsVisible ? 'visible' : 'none';
-    if (this.map.getLayer(this.departmentsFillLayerId)) {
-      this.map.setLayoutProperty(this.departmentsFillLayerId, 'visibility', visibility);
-    }
-    if (this.map.getLayer(this.departmentsLineLayerId)) {
-      this.map.setLayoutProperty(this.departmentsLineLayerId, 'visibility', visibility);
+      this.map = null;
     }
   }
 }
