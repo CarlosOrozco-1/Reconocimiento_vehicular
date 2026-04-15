@@ -44,6 +44,44 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=55432
 ```
 
+Configuracion TomTom (pruebas):
+
+```env
+TOMTOM_ENABLED=true
+TOMTOM_API_KEY=<tu_key>
+TOMTOM_ZOOM=10
+TOMTOM_TIMEOUT_SEC=12
+TOMTOM_CACHE_TTL_SEC=60
+TOMTOM_PROBE_MAX_POINTS=120
+```
+
+Calibrar rutas para tiempo real:
+
+```bash
+./scripts/calibrate_tomtom.sh 50
+```
+
+Ver cobertura live calibrada:
+
+```bash
+curl "http://localhost:8000/routes/live-status?limit=200"
+```
+
+## Worker en tiempo real
+
+Control desde API:
+
+- `POST /monitor/worker/start`
+- `POST /monitor/worker/stop`
+- `GET /monitor/worker/status`
+- `GET /monitor/worker/requests?minutes=60&limit=100`
+
+Gestión de rutas monitoreadas:
+
+- `GET /monitor/routes`
+- `POST /monitor/routes/{route_code}`
+- `DELETE /monitor/routes/{route_code}`
+
 ## Troubleshooting rapido
 
 Si ejecutas `npm start` dentro de `backend/`, fallara porque no existe `package.json`.
@@ -57,9 +95,23 @@ Si el mapa solo muestra color base:
 2. Verifica rutas: `curl http://localhost:8000/routes/main`
 3. Verifica departamentos: `curl http://localhost:8000/departments`
 
+Checklist rapido automatizado:
+
+```bash
+./scripts/check_endpoints.sh
+```
+
+Si aparece `ERR_CONNECTION_REFUSED` en el frontend:
+
+- el backend no esta levantado en `:8000`,
+- inicia con `./scripts/run_api.sh` en una terminal separada,
+- confirma con `curl http://localhost:8000/health`.
+
 ## Base de datos
 
 Scripts SQL en `scriptDB/` para Postgres + PostGIS.
+
+Si ya tenías la base creada, aplica nuevos scripts manualmente (ej. `011_worker_monitoring.sql`).
 
 Si tienes conflicto de puertos con otras bases, usa un puerto alterno en `.env`:
 

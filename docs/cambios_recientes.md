@@ -40,6 +40,33 @@ Registro rapido de cambios para no perder contexto.
 - Carga departamentos desde `agrip:03_Limites_departamentales`.
 - Carga rutas desde `infraestructura:carretera_centroamericana`.
 - Normalizacion de codigos de ruta aplicada (formato `CA-xx`).
+
+### Integracion de trafico en tiempo real
+
+- Endpoint `GET /routes/{route_code}/summary` ahora soporta `include_live=true`.
+- Integracion TomTom con fallback de puntos sobre la ruta y cache por ruta.
+- Variables de entorno TomTom agregadas en `backend/.env.example`.
+- Documento tecnico: `docs/tomtom_integracion.md`.
+- Endpoint `GET /routes/live-status` agregado para monitorear cobertura live por ruta.
+- Tabla `route_live_probe_points` para guardar puntos calibrados con exito.
+- Script de calibracion: `backend/scripts/calibrate_tomtom.sh`.
+- Script de escaneo expandido: `backend/scripts/scan_tomtom_coverage.sh`.
+
+### Worker en tiempo real y observabilidad
+
+- Endpoints de control: start/stop/status/requests.
+- Endpoints de gestión de rutas monitoreadas (listar/agregar/eliminar).
+- Dashboard Angular con botones para iniciar/detener worker y tabla de solicitudes en vivo.
+- Endpoint `GET /routes/{route_code}/live-history` para curva temporal en dashboard.
+- Dashboard ahora grafica afluencia por ruta con datos de `route_live_history`.
+- Tablas de soporte: `monitored_routes`, `worker_request_log`, `worker_status`, `route_live_history`.
+- Documento operativo: `docs/worker_monitoreo_operacion.md`.
+
+### Fuentes externas de vehiculos
+
+- Fuente CKAN INE validada para vehiculos involucrados por tipo.
+- Script inicial para mezcla porcentual por tipo: `backend/scripts/fetch_ine_vehicle_mix.sh`.
+- Documento de fuentes: `docs/fuentes_externas_vehiculos.md`.
 - Config de entorno en `backend/.env.example`.
 - Conexion DB y repositorio SQL en `backend/src/api/db.py` y `backend/src/api/repository.py`.
 - Datos mock para desarrollo sin DB en `backend/src/api/mock_data.py`.

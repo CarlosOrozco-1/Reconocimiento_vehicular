@@ -30,6 +30,9 @@ Plan de trabajo oficial por fases:
 - `docs/decision_stack_mapa.md`
 - `docs/datos_espaciales_y_fuentes.md`
 - `docs/matriz_fuentes_trafico.md`
+- `docs/tomtom_integracion.md`
+- `docs/fuentes_externas_vehiculos.md`
+- `docs/worker_monitoreo_operacion.md`
 
 ## Entorno (Fedora + Distrobox)
 

@@ -16,6 +16,16 @@ class Settings:
     postgres_user: str = os.getenv("POSTGRES_USER", "traffic_user")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD", "traffic_pass")
 
+    tomtom_enabled: bool = os.getenv("TOMTOM_ENABLED", "true").lower() == "true"
+    tomtom_api_key: str = os.getenv("TOMTOM_API_KEY", "")
+    tomtom_zoom: int = int(os.getenv("TOMTOM_ZOOM", "10"))
+    tomtom_timeout_sec: int = int(os.getenv("TOMTOM_TIMEOUT_SEC", "12"))
+    tomtom_cache_ttl_sec: int = int(os.getenv("TOMTOM_CACHE_TTL_SEC", "60"))
+    tomtom_probe_max_points: int = int(os.getenv("TOMTOM_PROBE_MAX_POINTS", "120"))
+
+    worker_interval_sec: int = int(os.getenv("WORKER_INTERVAL_SEC", "60"))
+    worker_name: str = os.getenv("WORKER_NAME", "tomtom_worker")
+
     @property
     def dsn(self) -> str:
         return (

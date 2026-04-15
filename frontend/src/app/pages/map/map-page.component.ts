@@ -170,12 +170,22 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
         const normalFlow = Number(summaryData['normal_flow'] ?? 0);
         const peakFlow = Number(summaryData['peak_flow'] ?? 0);
         const peakHour = summaryData['peak_hour'] == null ? 'N/A' : `${summaryData['peak_hour']}:00`;
+        const liveStatus = String(summaryData['live_status'] ?? 'N/A');
+        const liveCurrentSpeed = Number(summaryData['live_current_speed_kph'] ?? 0);
+        const liveFreeFlowSpeed = Number(summaryData['live_free_flow_speed_kph'] ?? 0);
+        const liveRoadClosure = summaryData['live_road_closure'] === true ? 'Si' : 'No';
+        const liveMessage = String(summaryData['live_message'] ?? 'Sin detalle');
 
         const html = `
           <strong>${routeName}</strong><br/>
           Flujo normal: ${normalFlow} veh/h<br/>
           Flujo hora pico: ${peakFlow} veh/h<br/>
           Hora pico: ${peakHour}<br/>
+          Estado tiempo real: ${liveStatus}<br/>
+          Velocidad actual: ${liveCurrentSpeed} km/h<br/>
+          Velocidad libre: ${liveFreeFlowSpeed} km/h<br/>
+          Cierre vial: ${liveRoadClosure}<br/>
+          TomTom: ${liveMessage}<br/>
           Departamentos: ${names.length > 0 ? names.join(', ') : 'Sin cruces'}
         `;
 
