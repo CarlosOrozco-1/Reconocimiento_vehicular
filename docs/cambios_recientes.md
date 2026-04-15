@@ -62,6 +62,11 @@ Registro rapido de cambios para no perder contexto.
 - Tablas de soporte: `monitored_routes`, `worker_request_log`, `worker_status`, `route_live_history`.
 - Documento operativo: `docs/worker_monitoreo_operacion.md`.
 
+### Setup de entorno
+
+- Script raíz `bootstrap.sh` para levantar proyecto desde cero.
+- Guía de uso en `docs/bootstrap_desde_cero.md`.
+
 ### Fuentes externas de vehiculos
 
 - Fuente CKAN INE validada para vehiculos involucrados por tipo.

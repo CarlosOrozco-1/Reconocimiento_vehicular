@@ -33,6 +33,7 @@ Plan de trabajo oficial por fases:
 - `docs/tomtom_integracion.md`
 - `docs/fuentes_externas_vehiculos.md`
 - `docs/worker_monitoreo_operacion.md`
+- `docs/bootstrap_desde_cero.md`
 
 ## Entorno (Fedora + Distrobox)
 
