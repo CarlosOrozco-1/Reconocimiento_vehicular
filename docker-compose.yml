@@ -1,0 +1,113 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: traffic_gt_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-traffic_gt}
+      POSTGRES_USER: ${POSTGRES_USER:-traffic_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-traffic_pass}
+    ports:
+      - "${POSTGRES_HOST_PORT:-55432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./backend/scriptDB:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-traffic_user} -d ${POSTGRES_DB:-traffic_gt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: traffic_gt_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      API_ALLOW_MOCK: ${API_ALLOW_MOCK:-true}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-traffic_gt}
+      POSTGRES_USER: ${POSTGRES_USER:-traffic_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-traffic_pass}
+      TOMTOM_ENABLED: ${TOMTOM_ENABLED:-true}
+      TOMTOM_API_KEY: ${TOMTOM_API_KEY:-}
+      TOMTOM_ZOOM: ${TOMTOM_ZOOM:-10}
+      TOMTOM_TIMEOUT_SEC: ${TOMTOM_TIMEOUT_SEC:-12}
+      TOMTOM_CACHE_TTL_SEC: ${TOMTOM_CACHE_TTL_SEC:-60}
+      TOMTOM_PROBE_MAX_POINTS: ${TOMTOM_PROBE_MAX_POINTS:-120}
+      WORKER_NAME: ${WORKER_NAME:-tomtom_worker}
+      WORKER_INTERVAL_SEC: ${WORKER_INTERVAL_SEC:-60}
+    ports:
+      - "${BACKEND_HOST_PORT:-8000}:8000"
+    networks:
+      - app-net
+
+  db-init:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: traffic_gt_db_init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-traffic_gt}
+      POSTGRES_USER: ${POSTGRES_USER:-traffic_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-traffic_pass}
+    command: ["python", "-m", "src.data.db_init", "--load-segeplan"]
+    restart: "no"
+    profiles:
+      - init
+    networks:
+      - app-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: traffic_gt_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_HOST_PORT:-4200}:80"
+    networks:
+      - app-net
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: traffic_gt_caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    environment:
+      SITE_HOST: ${SITE_HOST:-localhost}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ${CADDYFILE_PATH:-./deploy/Caddyfile.local}:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-net
+
+volumes:
+  pg_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-net:

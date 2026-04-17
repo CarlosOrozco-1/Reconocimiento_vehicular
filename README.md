@@ -34,6 +34,10 @@ Plan de trabajo oficial por fases:
 - `docs/fuentes_externas_vehiculos.md`
 - `docs/worker_monitoreo_operacion.md`
 - `docs/bootstrap_desde_cero.md`
+- `docs/plan_containerizacion_docker.md`
+- `docs/docker_fase1.md`
+- `docs/docker_fase2.md`
+- `docs/docker_fase3.md`
 
 ## Entorno (Fedora + Distrobox)
 
@@ -66,4 +70,27 @@ distrobox enter vehicle-counter-dev
 cd /home/ceorozcom/Documents/Proyecto-Reconocimiento-Vehicular/frontend
 npm install
 npm run start
+```
+
+## Docker (Fase 1)
+
+```bash
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up -d --build
+```
+
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:8000/health`
+
+## Docker (Fase 2)
+
+```bash
+docker compose --env-file .env.docker --profile init up db-init
+./scripts/docker/backup_db.sh
+```
+
+## Docker (Fase 3)
+
+```bash
+docker compose --env-file .env.docker up -d --build
 ```

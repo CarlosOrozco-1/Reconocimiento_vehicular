@@ -67,6 +67,33 @@ Registro rapido de cambios para no perder contexto.
 - Script raíz `bootstrap.sh` para levantar proyecto desde cero.
 - Guía de uso en `docs/bootstrap_desde_cero.md`.
 
+### Docker Fase 1
+
+- `docker-compose.yml` creado para `db`, `backend`, `frontend`.
+- `backend/Dockerfile` y `frontend/Dockerfile` agregados.
+- `frontend/nginx.conf` para servir Angular SPA.
+- `.env.docker.example` y guía `docs/docker_fase1.md` agregadas.
+
+### Docker Fase 2
+
+- Servicio `db-init` agregado a `docker-compose.yml` (profile `init`).
+- Script backend `src/data/db_init.py` para migraciones + carga SEGEPLAN + seed inicial.
+- Utilidades de SQL idempotente en `src/data/run_sql_migrations.py`.
+- Scripts de backup/restore Docker:
+  - `scripts/docker/backup_db.sh`
+  - `scripts/docker/restore_db.sh`
+- Guía `docs/docker_fase2.md` agregada.
+
+### Docker Fase 3
+
+- Servicio `caddy` agregado a `docker-compose.yml`.
+- Configuración separada:
+  - `deploy/Caddyfile.local` (TLS interno)
+  - `deploy/Caddyfile.prod` (certificado público)
+  en un solo host (`SITE_HOST`) con API en `/api`.
+- Variables de host/TLS local agregadas a `.env.docker.example`.
+- Guía `docs/docker_fase3.md` agregada.
+
 ### Fuentes externas de vehiculos
 
 - Fuente CKAN INE validada para vehiculos involucrados por tipo.

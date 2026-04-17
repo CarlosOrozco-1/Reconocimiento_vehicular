@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+outputs
+data/raw/videos
+data/raw/images
+models/pretrained

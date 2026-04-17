@@ -19,6 +19,7 @@ Reglas de desarrollo para el proyecto Vehicle Counter YOLO.
 5. Manejar errores con mensajes claros y logs minimos.
 6. Escribir codigo modular dentro de `src/`.
 7. Agregar pruebas basicas para logica critica (conteo y CSV).
+8. **Todos los cambios, código nuevo o modificado dentro del proyecto deben ser debidamente comentados explicando la lógica o motivo del cambio.**
 
 ## Tecnologias oficiales
 
