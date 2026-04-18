@@ -147,8 +147,8 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
   // Chart instance
   private trafficChart: Chart | null = null;
 
-  // Colores para las rutas (modulo de color distintivo)
-  private colors = ['#e11d48', '#d97706', '#65a30d', '#0891b2', '#4f46e5', '#c026d3', '#be123c'];
+  // Colores para las rutas: uno distinto por ruta para las 9 rutas CA de Guatemala
+  private colors = ['#e11d48', '#d97706', '#16a34a', '#0891b2', '#4f46e5', '#c026d3', '#be123c', '#ea580c', '#0284c7'];
 
   constructor(private readonly trafficApi: TrafficApiService) {}
 
@@ -216,9 +216,10 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
             if (feature && feature.properties) feature.properties['baseColor'] = color;
             
             return {
+              // Ruta seleccionada se destaca en blanco, las demás en su color asignado
               color: this.selectedRoute === routeCode ? '#ffffff' : color,
-              weight: this.selectedRoute === routeCode ? 8 : 4,
-              opacity: this.selectedRoute === routeCode ? 1.0 : 0.8
+              weight: this.selectedRoute === routeCode ? 9 : 5,
+              opacity: this.selectedRoute === routeCode ? 1.0 : 0.85
             };
           },
           onEachFeature: (feature, layer) => {
@@ -235,7 +236,8 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
             layer.on('mouseout', (event) => {
               const target = event.target as L.Path;
               const isSelected = this.selectedRoute === routeCode;
-              target.setStyle({ weight: isSelected ? 8 : 4 });
+              // Restaurar grosor base al salir del hover
+              target.setStyle({ weight: isSelected ? 9 : 5 });
             });
             
             // Nuevo: selecciòn para dashboard 
@@ -251,14 +253,20 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  // Nuevo: Mantiene un tooltip actualizado con la info resumen
+  // Crea o actualiza el tooltip al pasar el mouse sobre la ruta
   private ensureTooltip(layer: L.FeatureGroup, routeCode: string, routeName: string) {
-    if (layer.getTooltip()) return; // Si ya tiene tooltip, no re-cargarlo continuamente
+    if (layer.getTooltip()) return;
 
     this.trafficApi.getRouteSummary(routeCode).subscribe({
       next: (res) => {
         const summary = res.data;
-        const html = `<b>${routeName}</b><br/>Flujo: ${summary['normal_flow'] || 0} veh/h <br/> TR: ${summary['live_status'] || 'N/A'}`;
+        const speed = summary['live_current_speed_kph'] ? `${summary['live_current_speed_kph']} km/h` : 'N/D';
+        const status = summary['live_status'] || 'Sin datos';
+        const html = `
+          <b style="color:#38bdf8">${routeName}</b><br/>
+          Flujo normal: <b>${summary['normal_flow'] || 0} veh/h</b><br/>
+          Velocidad: <b>${speed}</b><br/>
+          Estado: <b>${status}</b>`;
         layer.bindTooltip(html, { sticky: true, className: 'route-tooltip' }).openTooltip();
       }
     });
@@ -275,9 +283,10 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
           const isSelected = routeCode === String(feature?.properties?.['route_code']);
           const baseColor = feature?.properties?.['baseColor'] || '#22c55e';
           return {
+             // Ruta seleccionada: blanca y muy gruesa; el resto se atenúa
              color: isSelected ? '#ffffff' : baseColor,
-             weight: isSelected ? 8 : 4,
-             opacity: isSelected ? 1.0 : 0.6
+             weight: isSelected ? 9 : 3,
+             opacity: isSelected ? 1.0 : 0.5
           };
         });
     }

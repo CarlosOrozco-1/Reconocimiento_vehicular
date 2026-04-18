@@ -7,19 +7,26 @@ from src.api.db import get_connection
 
 
 def fetch_routes_geojson(limit: int = 500) -> dict:
+    # ST_Simplify reduce la cantidad de puntos por ruta para mejorar el render en Leaflet.
+    # La tolerancia 0.0003 grados equivale a ~33 metros, suficiente para rutas nacionales.
+    # preserve_collapsed=true conserva geometrias muy cortas que de otro modo desaparecerian.
     query = """
         SELECT
             route_code,
             MIN(name) AS name,
             ST_AsGeoJSON(
                 ST_Multi(
-                    ST_LineMerge(
-                        ST_UnaryUnion(
-                            ST_Collect(geom)
-                        )
+                    ST_SimplifyPreserveTopology(
+                        ST_LineMerge(
+                            ST_UnaryUnion(
+                                ST_Collect(geom)
+                            )
+                        ),
+                        0.0003
                     )
                 )
-            ) AS geom_json
+            ) AS geom_json,
+            ROUND(SUM(ST_Length(geom::geography)) / 1000)::int AS length_km
         FROM road_segments
         GROUP BY route_code
         ORDER BY route_code
@@ -38,12 +45,14 @@ def fetch_routes_geojson(limit: int = 500) -> dict:
                 "properties": {
                     "route_code": row["route_code"],
                     "name": row["name"],
+                    "length_km": row["length_km"],
                 },
                 "geometry": json.loads(row["geom_json"]),
             }
         )
 
     return {"type": "FeatureCollection", "features": features}
+
 
 
 def fetch_departments_geojson(limit: int = 500) -> dict:
