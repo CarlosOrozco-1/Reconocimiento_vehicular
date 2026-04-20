@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import date
 
+import logging
+
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,13 +15,14 @@ from src.api.mock_data import (
     mock_route_summary,
     mock_routes_geojson,
 )
-from src.api.repository import (
+from src.api.repository import ( # importacion de funciones del repositorio, carga de datos, consultas, etc
     add_monitored_route,
     ensure_monitored_routes_seed,
     fetch_departments_geojson,
     fetch_live_probe_status,
     fetch_monitored_routes,
     fetch_peak_hours,
+    fetch_route_catalog,
     fetch_route_departments,
     fetch_route_live_history,
     fetch_route_summary,
@@ -33,6 +36,7 @@ from src.api.tomtom import get_live_traffic_for_route
 from src.api.worker_runtime import worker_controller
 
 app = FastAPI(title="Traffic Map Guatemala API", version="0.1.0")
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,9 +71,22 @@ def get_main_routes(limit: int = Query(default=500, ge=1, le=5000)) -> dict:
         geojson = fetch_routes_geojson(limit=limit)
         return {"source": "db", "data": geojson}
     except Exception:
+        logger.warning("Falling back to mock routes for /routes/main", exc_info=True)
         if not settings.api_allow_mock:
             raise
         return {"source": "mock", "data": mock_routes_geojson()}
+
+
+@app.get("/routes/catalog")
+def get_route_catalog(limit: int = Query(default=500, ge=1, le=5000)) -> dict:
+    try:
+        rows = fetch_route_catalog(limit=limit)
+        return {"source": "db", "data": rows}
+    except Exception:
+        logger.warning("Falling back to mock route catalog for /routes/catalog", exc_info=True)
+        if not settings.api_allow_mock:
+            raise
+        return {"source": "mock", "data": []}
 
 
 @app.get("/peak-hours")

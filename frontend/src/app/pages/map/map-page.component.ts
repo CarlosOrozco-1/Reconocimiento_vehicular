@@ -35,13 +35,39 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
       
       <!-- Mapa -->
       <div class="map-section" [class.with-sidebar]="selectedRoute">
-        <div class="layer-controls">
+            <div class="layer-controls">
           <button type="button" class="control-btn" (click)="toggleRoutes()">
             {{ routesVisible ? 'Ocultar rutas' : 'Mostrar rutas' }}
           </button>
           <button type="button" class="control-btn" (click)="toggleDepartments()">
             {{ departmentsVisible ? 'Ocultar departamentos' : 'Mostrar departamentos' }}
           </button>
+        </div>
+        <div class="route-selector">
+          <div class="route-selector-header">
+            <div>
+              <strong>Rutas principales</strong>
+              <span class="route-count">({{ routeCatalog.length }})</span>
+            </div>
+            <button *ngIf="selectedRoute" type="button" class="control-btn"
+              (click)="toggleSingleRouteView()">
+              {{ showOnlySelectedRoute ? 'Ver todas' : 'Ver solo seleccionada' }}
+            </button>
+          </div>
+          <div class="route-list">
+            <button
+              *ngFor="let route of routeCatalog"
+              type="button"
+              class="route-code-btn"
+              [class.selected]="String(route['route_code'] ?? '') === selectedRoute"
+              (click)="selectRoute(String(route['route_code'] ?? ''), String(route['name'] ?? ''))">
+              {{ route['route_code'] }} - {{ route['name'] }}
+            </button>
+          </div>
+        </div>
+        <div *ngIf="routesSourceInfo || routeDataWarning" class="data-warning">
+          <div *ngIf="routesSourceInfo">{{ routesSourceInfo }}</div>
+          <div *ngIf="routeDataWarning">{{ routeDataWarning }}</div>
         </div>
         <div id="main-map" class="map-container"></div>
       </div>
@@ -106,6 +132,53 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
         margin-bottom: 12px;
       }
 
+      .route-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .route-selector-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .route-count {
+        color: #94a3b8;
+        margin-left: 6px;
+        font-size: 0.95rem;
+      }
+
+      .route-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+      }
+
+      .route-code-btn {
+        border: 1px solid #94a3b8;
+        background: #0f172a;
+        color: #cbd5e1;
+        border-radius: 10px;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      .route-code-btn.selected {
+        border-color: #38bdf8;
+        background: #0c4a6e;
+        color: #ffffff;
+      }
+
+      .route-code-btn:hover {
+        background: #1e293b;
+      }
+
       .control-btn {
         border: 1px solid #0ea5e9;
         background: #0284c7;
@@ -128,6 +201,16 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
         border-radius: 10px;
         overflow: hidden;
       }
+
+      .data-warning {
+        color: #92400e;
+        background: rgba(254, 231, 200, 0.85);
+        border: 1px solid #f59e0b;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+      }
     `
   ]
 })
@@ -137,6 +220,10 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
   private departmentsLayer: L.GeoJSON | null = null;
   routesVisible = true;
   departmentsVisible = true;
+  routesSourceInfo: string | null = null;
+  routeDataWarning: string | null = null;
+  routeCatalog: Array<Record<string, unknown>> = [];
+  showOnlySelectedRoute = false;
 
   // Selected Route logic
   selectedRoute: string | null = null;
@@ -166,6 +253,7 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
 
     this.loadDepartments();
     this.loadRoutes();
+    this.loadRouteCatalog();
   }
 
   // Modificado: carga de departamentos con tooltip estatico
@@ -204,29 +292,31 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
         if (this.routesLayer) this.map.removeLayer(this.routesLayer);
 
         let colorIndex = 0;
-        
+        this.routesSourceInfo =
+          response.source === 'mock'
+            ? 'Los datos de rutas se están mostrando con información de ejemplo (mock).'
+            : null;
+
+        const features = (response.data as any)?.features ?? [];
+        if (Array.isArray(features) && features.length <= 2) {
+          this.routeDataWarning =
+            'Se detectaron solo pocas rutas en el backend. Verifica que la base de datos tenga cargados los segmentos de las rutas principales.';
+        } else {
+          this.routeDataWarning = null;
+        }
+
         this.routesLayer = L.geoJSON(response.data as never, {
           style: (feature) => {
             const routeCode = String(feature?.properties?.['route_code'] ?? '');
-            
-            // Asigna color distinto a cada ruta iterando el arreglo
             const color = this.colors[colorIndex % this.colors.length];
             colorIndex++;
-            // Guarda el color base en las propiedades para el mouseout
             if (feature && feature.properties) feature.properties['baseColor'] = color;
-            
-            return {
-              // Ruta seleccionada se destaca en blanco, las demás en su color asignado
-              color: this.selectedRoute === routeCode ? '#ffffff' : color,
-              weight: this.selectedRoute === routeCode ? 9 : 5,
-              opacity: this.selectedRoute === routeCode ? 1.0 : 0.85
-            };
+            return this.getRouteStyle(routeCode, color);
           },
           onEachFeature: (feature, layer) => {
             const routeCode = String(feature.properties?.['route_code'] ?? '');
             const routeName = String(feature.properties?.['name'] ?? routeCode);
 
-            // Modificado: tooltip dinámico al pasar el mouse
             layer.on('mouseover', (event) => {
               const target = event.target as L.Path;
               target.setStyle({ weight: 7 });
@@ -236,11 +326,9 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
             layer.on('mouseout', (event) => {
               const target = event.target as L.Path;
               const isSelected = this.selectedRoute === routeCode;
-              // Restaurar grosor base al salir del hover
               target.setStyle({ weight: isSelected ? 9 : 5 });
             });
-            
-            // Nuevo: selecciòn para dashboard 
+
             layer.on('click', () => {
               this.selectRoute(routeCode, routeName);
             });
@@ -254,6 +342,18 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
   }
 
   // Crea o actualiza el tooltip al pasar el mouse sobre la ruta
+  private getRouteStyle(routeCode: string, baseColor: string) {
+    const isSelected = this.selectedRoute === routeCode;
+    const hiddenRoute = this.selectedRoute && !isSelected && this.showOnlySelectedRoute;
+
+    return {
+      color: isSelected ? '#ffffff' : baseColor,
+      weight: isSelected ? 9 : hiddenRoute ? 1 : 5,
+      opacity: isSelected ? 1.0 : hiddenRoute ? 0 : 0.35,
+      interactive: !hiddenRoute,
+    };
+  }
+
   private ensureTooltip(layer: L.FeatureGroup, routeCode: string, routeName: string) {
     if (layer.getTooltip()) return;
 
@@ -277,25 +377,36 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
     this.selectedRoute = routeCode;
     this.selectedRouteName = routeName;
     
-    // Repintar para reflejar la ruta seleccionada (blanco y mas gruesa)
-    if (this.routesLayer) {
-        this.routesLayer.setStyle((feature: any) => {
-          const isSelected = routeCode === String(feature?.properties?.['route_code']);
-          const baseColor = feature?.properties?.['baseColor'] || '#22c55e';
-          return {
-             // Ruta seleccionada: blanca y muy gruesa; el resto se atenúa
-             color: isSelected ? '#ffffff' : baseColor,
-             weight: isSelected ? 9 : 3,
-             opacity: isSelected ? 1.0 : 0.5
-          };
-        });
-    }
+    this.refreshRouteStyles();
 
-    // Cargar detalle completo
     forkJoin({
       departments: this.trafficApi.getRouteDepartments(routeCode),
       summary: this.trafficApi.getRouteSummary(routeCode)
     }).subscribe({
+      next: ({ departments, summary }) => {
+        this.selectedDepartments = departments.data
+          .map((item) => String(item['department_name'] ?? ''))
+          .filter((item) => item.length > 0);
+        this.selectedRouteSummary = summary.data;
+        this.loadChart(routeCode);
+      },
+      error: (err: unknown) => console.error('Error seleccionando ruta', err)
+    });
+  }
+
+  private refreshRouteStyles(): void {
+    if (!this.routesLayer) return;
+    this.routesLayer.setStyle((feature: any) => {
+      const routeCode = String(feature?.properties?.['route_code'] ?? '');
+      const baseColor = feature?.properties?.['baseColor'] || '#22c55e';
+      return this.getRouteStyle(routeCode, baseColor);
+    });
+  }
+
+  private toggleSingleRouteView(): void {
+    this.showOnlySelectedRoute = !this.showOnlySelectedRoute;
+    this.refreshRouteStyles();
+  }
       next: ({ departments, summary }) => {
         this.selectedDepartments = departments.data
           .map((item) => String(item['department_name'] ?? ''))
@@ -358,23 +469,36 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
     }, 100);
   }
 
+  private loadRouteCatalog(): void {
+    this.trafficApi.getRouteCatalog().subscribe({
+      next: (response) => {
+        this.routeCatalog = Array.isArray(response.data) ? response.data : [];
+      },
+      error: (err: unknown) => {
+        console.error('Error cargando catálogo de rutas', err);
+      }
+    });
+  }
+
   // Nuevo: limpiar ruta seleccionada 
   clearSelection(): void {
     this.selectedRoute = null;
     this.selectedRouteName = '';
     this.selectedRouteSummary = null;
+    this.selectedDepartments = [];
+    this.showOnlySelectedRoute = false;
     if (this.trafficChart) {
       this.trafficChart.destroy();
       this.trafficChart = null;
     }
-    
-    // Restaurar colores originales
+
     if (this.routesLayer) {
-        this.routesLayer.setStyle((feature: any) => ({
-             color: feature?.properties?.['baseColor'] || '#22c55e',
-             weight: 4,
-             opacity: 0.8
-        }));
+      this.routesLayer.setStyle((feature: any) => ({
+        color: feature?.properties?.['baseColor'] || '#22c55e',
+        weight: 5,
+        opacity: 0.85,
+        interactive: true,
+      }));
     }
   }
 

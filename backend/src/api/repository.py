@@ -54,6 +54,24 @@ def fetch_routes_geojson(limit: int = 500) -> dict:
     return {"type": "FeatureCollection", "features": features}
 
 
+def fetch_route_catalog(limit: int = 500) -> list[dict]:
+    query = """
+        SELECT
+            route_code,
+            MIN(name) AS name,
+            COUNT(*) AS segment_count,
+            ROUND(SUM(ST_Length(geom::geography)) / 1000)::int AS length_km
+        FROM road_segments
+        GROUP BY route_code
+        ORDER BY route_code
+        LIMIT %s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (limit,))
+            rows = cur.fetchall()
+    return rows
+
 
 def fetch_departments_geojson(limit: int = 500) -> dict:
     query = """

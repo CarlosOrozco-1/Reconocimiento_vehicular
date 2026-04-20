@@ -22,6 +22,12 @@ export class TrafficApiService {
     );
   }
 
+  getRouteCatalog(): Observable<{ source: string; data: Array<Record<string, unknown>> }> {
+    return this.http.get<{ source: string; data: Array<Record<string, unknown>> }>(
+      `${this.baseUrl}/routes/catalog`
+    );
+  }
+
   getRouteDepartments(
     routeCode: string
   ): Observable<{ source: string; data: Array<Record<string, unknown>> }> {
