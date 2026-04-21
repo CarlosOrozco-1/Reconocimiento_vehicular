@@ -1,386 +1,328 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 
 import { TrafficApiService } from '../../services/api/traffic-api.service';
 
+/**
+ * Componente de dashboard de trafico.
+ * Muestra el catalogo de rutas con su longitud, y las horas pico por ruta
+ * obtenidas desde la tabla traffic_hourly_agg de la base de datos.
+ * Este componente reemplaza el dashboard del worker que fue archivado.
+ */
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   template: `
     <section class="panel">
-      <h2>Dashboard de monitoreo</h2>
-      <p>Estado real del worker, rutas monitoreadas y últimas solicitudes.</p>
-
-      <div class="actions">
-        <button type="button" class="control-btn" (click)="startWorker()">Iniciar worker</button>
-        <button type="button" class="control-btn" (click)="stopWorker()">Detener worker</button>
-        <button type="button" class="control-btn" (click)="refreshAll()">Actualizar</button>
+      <div class="dashboard-header">
+        <h2>Dashboard de Tráfico — Guatemala</h2>
+        <p class="subtitle">Resumen de rutas principales y horas pico registradas en la base de datos.</p>
       </div>
 
-      <div class="status-grid" *ngIf="workerStatus">
-        <div class="status-card">
-          <strong>Estado</strong>
-          <span>{{ workerStatus['status'] }}</span>
+      <!-- Indicadores globales -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🛣️</div>
+          <div class="stat-content">
+            <span class="stat-number">{{ routeCatalog.length }}</span>
+            <span class="stat-label">Rutas principales</span>
+          </div>
         </div>
-        <div class="status-card">
-          <strong>Runtime</strong>
-          <span>{{ workerStatus['runtime_running'] ? 'running' : 'stopped' }}</span>
+        <div class="stat-card">
+          <div class="stat-icon">📏</div>
+          <div class="stat-content">
+            <span class="stat-number">{{ totalKm }}</span>
+            <span class="stat-label">Kilómetros totales</span>
+          </div>
         </div>
-        <div class="status-card">
-          <strong>Última corrida</strong>
-          <span>{{ workerStatus['last_run_at'] || 'N/A' }}</span>
+        <div class="stat-card">
+          <div class="stat-icon">⏰</div>
+          <div class="stat-content">
+            <span class="stat-number">{{ peakHours.length }}</span>
+            <span class="stat-label">Rutas con datos de pico</span>
+          </div>
         </div>
-        <div class="status-card">
-          <strong>Último éxito</strong>
-          <span>{{ workerStatus['last_success_at'] || 'N/A' }}</span>
-        </div>
-        <div class="status-card">
-          <strong>Requests OK</strong>
-          <span>{{ workerStatus['requests_ok'] || 0 }}</span>
-        </div>
-        <div class="status-card">
-          <strong>Requests Error</strong>
-          <span>{{ workerStatus['requests_error'] || 0 }}</span>
+        <div class="stat-card" [class.connected]="dbConnected === true" [class.error]="dbConnected === false">
+          <div class="stat-icon">{{ dbConnected === true ? '✅' : dbConnected === false ? '❌' : '⏳' }}</div>
+          <div class="stat-content">
+            <span class="stat-number">{{ dbConnected === true ? 'Online' : dbConnected === false ? 'Error' : '...' }}</span>
+            <span class="stat-label">Base de datos</span>
+          </div>
         </div>
       </div>
 
-      <h3>Rutas monitoreadas</h3>
-      <div class="route-actions">
-        <input [(ngModel)]="newRouteCode" placeholder="Ej: CA-2" />
-        <button type="button" class="control-btn" (click)="addRoute()">Agregar ruta</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Ruta</th>
-            <th>Enabled</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let route of monitoredRoutes">
-            <td>{{ route['route_code'] }}</td>
-            <td>{{ route['enabled'] }}</td>
-            <td>
-              <button type="button" class="danger-btn" (click)="removeRoute(route['route_code'])">
-                Quitar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Curva de afluencia (tiempo real)</h3>
-      <div class="route-actions">
-        <label>Ruta:</label>
-        <select [(ngModel)]="selectedRouteCode" (change)="refreshHistory()">
-          <option *ngFor="let route of monitoredRoutes" [value]="route['route_code']">
-            {{ route['route_code'] }}
-          </option>
-        </select>
-        <button type="button" class="control-btn" (click)="refreshHistory()">Actualizar curva</button>
-      </div>
-
-      <div class="chart-box" *ngIf="historyChartPoints.length > 0; else noHistoryTpl">
-        <svg viewBox="0 0 600 180" class="history-chart">
-          <polyline points="0,170 600,170" class="axis-line"></polyline>
-          <polyline [attr.points]="historyChartPolyline" class="curve-line"></polyline>
-        </svg>
-        <div class="chart-meta">
-          <span>Último valor afluencia: {{ latestAfluenciaPct }}%</span>
-          <span>Lecturas: {{ historyChartPoints.length }}</span>
+      <!-- Catalogo de rutas -->
+      <div class="section-block">
+        <h3>Catálogo de rutas</h3>
+        <div *ngIf="routeCatalog.length === 0" class="empty-state">
+          <span>Sin rutas cargadas en la base de datos.</span>
+        </div>
+        <div class="route-cards" *ngIf="routeCatalog.length > 0">
+          <div class="route-card" *ngFor="let route of routeCatalog"
+               [id]="'dash-route-' + route['route_code']">
+            <div class="route-card-header">
+              <span class="route-badge">{{ route['route_code'] }}</span>
+              <span class="route-km">{{ route['length_km'] }} km</span>
+            </div>
+            <div class="route-card-name">{{ route['name'] }}</div>
+            <div class="route-card-meta">{{ route['segment_count'] }} segmentos</div>
+          </div>
         </div>
       </div>
-      <ng-template #noHistoryTpl>
-        <p class="muted">Sin datos de historial para esta ruta. Inicia el worker y espera algunas lecturas.</p>
-      </ng-template>
 
-      <h3>Últimas solicitudes del worker</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Ruta</th>
-            <th>Resultado</th>
-            <th>Duración ms</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let req of workerRequests">
-            <td>{{ req['created_at'] }}</td>
-            <td>{{ req['route_code'] }}</td>
-            <td>{{ req['result'] }}</td>
-            <td>{{ req['duration_ms'] }}</td>
-            <td>{{ req['error_message'] || '-' }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Horas pico por ruta -->
+      <div class="section-block">
+        <h3>Horas pico por ruta</h3>
+        <p class="section-note" *ngIf="peakHours.length === 0">
+          Sin datos de horas pico. Se poblarán cuando haya registros en <code>traffic_hourly_agg</code>.
+        </p>
+        <table *ngIf="peakHours.length > 0">
+          <thead>
+            <tr>
+              <th>Ruta</th>
+              <th>Nombre</th>
+              <th>Hora pico</th>
+              <th>Flujo promedio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of peakHours" [id]="'peak-row-' + row['route_code']">
+              <td><span class="route-badge small">{{ row['route_code'] }}</span></td>
+              <td>{{ row['route_name'] }}</td>
+              <td class="peak-hour">{{ row['peak_hour'] }}:00 h</td>
+              <td>{{ row['avg_flow'] }} veh/h</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   `,
   styles: [
     `
-      .actions,
-      .route-actions {
+      .panel {
+        padding: 24px;
+        color: #e2e8f0;
+      }
+
+      .dashboard-header {
+        margin-bottom: 24px;
+      }
+
+      .dashboard-header h2 {
+        margin: 0 0 4px 0;
+        font-size: 1.6rem;
+        color: #f1f5f9;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.95rem;
+      }
+
+      /* ---- Stats grid ---- */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px 20px;
         display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
+        align-items: center;
+        gap: 16px;
+        transition: border-color 0.2s ease;
+      }
+
+      .stat-card.connected { border-color: #10b981; }
+      .stat-card.error     { border-color: #ef4444; }
+
+      .stat-icon { font-size: 2rem; }
+
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .stat-number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #38bdf8;
+        line-height: 1;
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* ---- Section blocks ---- */
+      .section-block {
+        margin-bottom: 32px;
+      }
+
+      .section-block h3 {
+        font-size: 1.1rem;
+        color: #94a3b8;
+        margin: 0 0 14px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1e293b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .section-note {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-style: italic;
+        margin: 0;
+      }
+
+      code {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 0.85rem;
+        color: #38bdf8;
+      }
+
+      /* ---- Route cards ---- */
+      .route-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+
+      .route-card {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: border-color 0.2s;
+      }
+
+      .route-card:hover { border-color: #38bdf8; }
+
+      .route-card-header {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
       }
 
-      .status-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        margin-bottom: 16px;
+      .route-badge {
+        background: #0c4a6e;
+        color: #38bdf8;
+        border: 1px solid #0284c7;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
       }
 
-      .status-card {
-        border: 1px solid #1f2937;
-        border-radius: 8px;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      .route-badge.small { font-size: 0.78rem; padding: 2px 6px; }
+
+      .route-km {
+        color: #94a3b8;
+        font-size: 0.82rem;
       }
 
-      .control-btn,
-      .danger-btn {
-        border: 1px solid #374151;
-        background: #111827;
-        color: #e5e7eb;
-        border-radius: 8px;
-        padding: 8px 10px;
-        cursor: pointer;
+      .route-card-name {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .danger-btn {
-        border-color: #7f1d1d;
+      .route-card-meta {
+        color: #475569;
+        font-size: 0.78rem;
       }
 
+      /* ---- Table ---- */
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 18px;
       }
 
-      th,
-      td {
+      th, td {
         text-align: left;
-        border-bottom: 1px solid #1f2937;
-        padding: 8px;
-        font-size: 13px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #1e293b;
+        font-size: 0.9rem;
       }
 
       th {
-        color: #9ca3af;
+        color: #64748b;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
 
-      input {
-        border: 1px solid #374151;
-        background: #0f172a;
-        color: #e5e7eb;
-        border-radius: 8px;
-        padding: 8px;
+      .peak-hour {
+        color: #f97316;
+        font-weight: 600;
       }
 
-      select {
-        border: 1px solid #374151;
-        background: #0f172a;
-        color: #e5e7eb;
-        border-radius: 8px;
-        padding: 8px;
-      }
-
-      .chart-box {
-        border: 1px solid #1f2937;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 16px;
-      }
-
-      .history-chart {
-        width: 100%;
-        height: 200px;
-        background: #020617;
-        border-radius: 6px;
-      }
-
-      .axis-line {
-        fill: none;
-        stroke: #334155;
-        stroke-width: 1;
-      }
-
-      .curve-line {
-        fill: none;
-        stroke: #22c55e;
-        stroke-width: 3;
-      }
-
-      .chart-meta {
-        display: flex;
-        gap: 16px;
-        margin-top: 8px;
-        color: #9ca3af;
-        font-size: 12px;
-      }
-
-      .muted {
-        color: #9ca3af;
+      .empty-state {
+        color: #64748b;
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 24px;
+        border: 1px dashed #334155;
+        border-radius: 10px;
       }
     `
   ]
 })
-export class DashboardPageComponent implements OnInit, OnDestroy {
-  workerStatus: Record<string, unknown> | null = null;
-  workerRequests: Array<Record<string, unknown>> = [];
-  monitoredRoutes: Array<Record<string, unknown>> = [];
-  historyChartPoints: Array<Record<string, unknown>> = [];
-  historyChartPolyline = '';
-  latestAfluenciaPct = 0;
-  selectedRouteCode = '';
-  newRouteCode = '';
-
-  private refreshTimer: ReturnType<typeof setInterval> | null = null;
+export class DashboardPageComponent implements OnInit {
+  routeCatalog: Array<Record<string, unknown>> = [];
+  peakHours: Array<Record<string, unknown>> = [];
+  totalKm = 0;
+  dbConnected: boolean | null = null;
 
   constructor(private readonly trafficApi: TrafficApiService) {}
 
   ngOnInit(): void {
-    this.refreshAll();
-    this.refreshTimer = setInterval(() => this.refreshAll(), 10000);
+    this.loadCatalog();
+    this.loadPeakHours();
   }
 
-  ngOnDestroy(): void {
-    if (this.refreshTimer) {
-      clearInterval(this.refreshTimer);
-      this.refreshTimer = null;
-    }
-  }
-
-  refreshAll(): void {
-    this.trafficApi.getWorkerStatus().subscribe({
+  private loadCatalog(): void {
+    this.trafficApi.getRouteCatalog().subscribe({
       next: (res) => {
-        this.workerStatus = res.data;
-      }
-    });
-
-    this.trafficApi.getWorkerRequests(60, 80).subscribe({
-      next: (res) => {
-        this.workerRequests = res.data;
-      }
-    });
-
-    this.trafficApi.getMonitoredRoutes(false).subscribe({
-      next: (res) => {
-        this.monitoredRoutes = res.data;
-        if (!this.selectedRouteCode && this.monitoredRoutes.length > 0) {
-          this.selectedRouteCode = String(this.monitoredRoutes[0]['route_code'] ?? '');
-        }
-        if (this.selectedRouteCode) {
-          this.refreshHistory();
-        }
-      }
-    });
-  }
-
-  refreshHistory(): void {
-    const routeCode = this.selectedRouteCode.trim().toUpperCase();
-    if (!routeCode) {
-      this.historyChartPoints = [];
-      this.historyChartPolyline = '';
-      this.latestAfluenciaPct = 0;
-      return;
-    }
-
-    this.trafficApi.getRouteLiveHistory(routeCode, 24, 300).subscribe({
-      next: (res) => {
-        this.historyChartPoints = res.data;
-        this.updateHistoryPolyline();
+        this.routeCatalog = Array.isArray(res.data) ? res.data : [];
+        // Calcular km totales sumando los km de cada ruta
+        this.totalKm = this.routeCatalog.reduce((acc, r) => acc + Number(r['length_km'] ?? 0), 0);
+        // Si el catalogo carga, la DB esta disponible
+        this.dbConnected = res.source === 'db';
       },
       error: () => {
-        this.historyChartPoints = [];
-        this.historyChartPolyline = '';
-        this.latestAfluenciaPct = 0;
+        this.dbConnected = false;
       }
     });
   }
 
-  private updateHistoryPolyline(): void {
-    const rows = this.historyChartPoints;
-    if (rows.length === 0) {
-      this.historyChartPolyline = '';
-      this.latestAfluenciaPct = 0;
-      return;
-    }
-
-    const values = rows
-      .map((row) => Number(row['afluencia_pct'] ?? 0))
-      .filter((value) => Number.isFinite(value));
-
-    if (values.length === 0) {
-      this.historyChartPolyline = '';
-      this.latestAfluenciaPct = 0;
-      return;
-    }
-
-    const maxY = Math.max(100, ...values);
-    const width = 600;
-    const height = 170;
-    const steps = Math.max(1, values.length - 1);
-
-    const points = values.map((value, index) => {
-      const x = (index / steps) * width;
-      const y = height - (value / maxY) * height;
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    });
-
-    this.historyChartPolyline = points.join(' ');
-    this.latestAfluenciaPct = Number(values[values.length - 1].toFixed(2));
-  }
-
-  startWorker(): void {
-    this.trafficApi.startWorker().subscribe({
-      next: () => this.refreshAll()
-    });
-  }
-
-  stopWorker(): void {
-    this.trafficApi.stopWorker().subscribe({
-      next: () => this.refreshAll()
-    });
-  }
-
-  addRoute(): void {
-    const routeCode = this.newRouteCode.trim().toUpperCase();
-    if (!routeCode) {
-      return;
-    }
-
-    this.trafficApi.addMonitoredRoute(routeCode).subscribe({
-      next: () => {
-        this.newRouteCode = '';
-        this.selectedRouteCode = routeCode;
-        this.refreshAll();
-      }
-    });
-  }
-
-  removeRoute(routeCodeRaw: unknown): void {
-    const routeCode = String(routeCodeRaw || '').trim().toUpperCase();
-    if (!routeCode) {
-      return;
-    }
-
-    this.trafficApi.removeMonitoredRoute(routeCode).subscribe({
-      next: () => {
-        if (this.selectedRouteCode === routeCode) {
-          this.selectedRouteCode = '';
-        }
-        this.refreshAll();
-      }
+  private loadPeakHours(): void {
+    this.trafficApi.getPeakHours().subscribe({
+      next: (res) => {
+        this.peakHours = Array.isArray(res.data) ? res.data : [];
+      },
+      error: (err: unknown) => console.error('Error cargando horas pico', err)
     });
   }
 }

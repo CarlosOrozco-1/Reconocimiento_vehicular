@@ -1,13 +1,8 @@
-ultralytics>=8.2.0
-opencv-python>=4.10.0
-numpy>=1.26.0
-pandas>=2.2.0
-matplotlib>=3.8.0
-streamlit>=1.33.0
-pyyaml>=6.0.1
+# Dependencias de la API y scripts de carga en produccion
+# Se ha optimizado para eliminar pesos pesados innecesarios (ultralytics, opencv, geopandas, osmnx).
 fastapi>=0.115.0
 uvicorn>=0.30.0
 psycopg[binary]>=3.2.0
-osmnx>=1.9.4
-geopandas>=1.0.1
 requests>=2.32.3
+python-multipart>=0.0.9
+pandas>=2.2.0
