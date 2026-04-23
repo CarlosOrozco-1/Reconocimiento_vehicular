@@ -1,16 +1,23 @@
 <div class="map-view-container animate-in">
-  <!-- Sidebar Flotante -->
-  <aside class="map-sidebar panel" [class.collapsed]="!selectedRoute">
+  <!-- Sidebar Permanente a la Derecha -->
+  <aside class="map-sidebar panel">
     <div class="sidebar-inner">
       
       <!-- Header -->
-      <div class="sidebar-header" *ngIf="selectedRoute">
+      <div class="sidebar-header" *ngIf="selectedRoute; else noSelectionHeader">
         <div class="header-main">
           <span class="badge-route">{{ selectedRoute }}</span>
           <button class="icon-btn-close" (click)="clearSelection()" title="Cerrar">✕</button>
         </div>
         <h2 class="route-title">{{ selectedRouteName }}</h2>
       </div>
+      
+      <ng-template #noSelectionHeader>
+        <div class="sidebar-header">
+          <h2 class="route-title">Red Vial Nacional</h2>
+          <p class="subtitle">Selecciona una ruta en el mapa o en la lista inferior para ver su análisis de tráfico.</p>
+        </div>
+      </ng-template>
 
       <!-- Filtros Rápidos (Ocultos en el side-panel ya que ahora es solo para detalles) -->
       <div class="quick-filters" *ngIf="selectedRoute">

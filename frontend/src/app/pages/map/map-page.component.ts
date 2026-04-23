@@ -94,7 +94,7 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
           this.onRouteClick(props.route_code, props.name);
           // Centrar el mapa en la ruta seleccionada con un poco de padding para el side-panel
           if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
-            this.map.fitBounds(layer.getBounds(), { paddingRight: [300, 0] });
+            this.map.fitBounds(layer.getBounds(), { paddingBottomRight: [400, 0] });
           }
         });
       }

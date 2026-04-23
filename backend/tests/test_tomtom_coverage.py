@@ -3,7 +3,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TOMTOM_URL = 'https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json'
-API_KEY = 'YUtYmvSNZ6LsVTYEc17rSljCiYbB1i55'
+API_KEY = 'YUtYmvSNZ6LsVTYEc17rSljCiYbB1i55' # Api key de TomTom
 HEADERS = {'User-Agent': 'Test', 'Accept': 'application/json'}
 
 points = {
