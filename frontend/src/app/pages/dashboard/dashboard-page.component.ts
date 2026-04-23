@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 
 import { TrafficApiService } from '../../services/api/traffic-api.service';
 
@@ -10,7 +12,7 @@ import { TrafficApiService } from '../../services/api/traffic-api.service';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BaseChartDirective],
   templateUrl: './dashboard-page.component.html',
   styleUrls: ['./dashboard-page.component.css']
 })
@@ -23,6 +25,46 @@ export class DashboardPageComponent implements OnInit {
   currentStep = 0;
   totalKm = 0;
   dbConnected: boolean | null = null;
+
+  // Configuración para el gráfico de Parque Vehicular (Dona)
+  public doughnutChartType: ChartType = 'doughnut';
+  public doughnutChartData: ChartData<'doughnut'> = {
+    labels: ['Automóviles', 'Motocicletas', 'Transporte Pesado'],
+    datasets: [{
+      data: [6500, 4200, 4720],
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  };
+  public doughnutChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+    }
+  };
+
+  // Configuración para el gráfico de Barras (Flujo por ruta)
+  public barChartType: ChartType = 'bar';
+  public barChartData: ChartData<'bar'> = {
+    labels: ['CA-1', 'CA-2', 'CA-9', 'CA-13'],
+    datasets: [
+      { data: [4500, 3200, 5100, 1500], label: 'Volumen Actual', backgroundColor: '#3b82f6', borderRadius: 4 },
+      { data: [6000, 4000, 6500, 2000], label: 'Capacidad Máx', backgroundColor: 'rgba(59, 130, 246, 0.2)', borderRadius: 4 }
+    ]
+  };
+  public barChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+    },
+    plugins: {
+      legend: { position: 'top', labels: { color: '#94a3b8' } }
+    }
+  };
 
   constructor(private readonly trafficApi: TrafficApiService) {}
 

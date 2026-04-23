@@ -4,9 +4,10 @@ import { provideRouter } from '@angular/router';
 
 import { AppComponent } from './app/app.component';
 import { appRoutes } from './app/app.routes';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 bootstrapApplication(AppComponent, {
-  providers: [provideRouter(appRoutes), provideHttpClient()]
+  providers: [provideRouter(appRoutes), provideHttpClient(), provideCharts(withDefaultRegisterables())]
 }).catch((err: unknown) => {
   console.error(err);
 });

@@ -89,38 +89,16 @@ export class MapPageComponent implements AfterViewInit, OnDestroy {
       onEachFeature: (feature, layer) => {
         const props = feature.properties;
         
-        // Tooltip dinamico on hover
-        layer.on('mouseover', (e) => {
-          this.ensureTooltip(e.target, props.route_code, props.name);
+        // Al hacer clic, seleccionar la ruta, mostrar el side-panel y centrar el mapa
+        layer.on('click', (e) => {
+          this.onRouteClick(props.route_code, props.name);
+          // Centrar el mapa en la ruta seleccionada con un poco de padding para el side-panel
+          if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+            this.map.fitBounds(layer.getBounds(), { paddingRight: [300, 0] });
+          }
         });
-
-        layer.on('click', () => this.onRouteClick(props.route_code, props.name));
       }
     }).addTo(this.map);
-  }
-
-  private ensureTooltip(layer: any, routeCode: string, routeName: string) {
-    if (layer.getTooltip()) {
-      layer.openTooltip();
-      return;
-    }
-
-    this.trafficApi.getRouteSummary(routeCode).subscribe({
-      next: (res) => {
-        const summary = res.data;
-        const speed = summary['live_current_speed_kph'] ? `${summary['live_current_speed_kph']} km/h` : 'N/D';
-        const status = summary['live_status'] || 'Sin datos';
-        const html = `
-          <div style="padding: 4px;">
-            <b style="color:#38bdf8; font-size: 1.1rem; display: block; margin-bottom: 4px;">${routeCode}: ${routeName}</b>
-            Flujo normal: <b>${summary['normal_flow'] || 0} veh/h</b><br/>
-            Flujo pico: <b style="color:#fbbf24">${summary['peak_flow'] || 0} veh/h</b><br/>
-            Velocidad: <b>${speed}</b><br/>
-            Estado: <b>${status}</b>
-          </div>`;
-        layer.bindTooltip(html, { sticky: true, className: 'custom-route-tooltip' }).openTooltip();
-      }
-    });
   }
 
   private renderDepartments(geoJson: any): void {

@@ -45,6 +45,16 @@
         </div>
       </div>
 
+      <!-- NUEVO: Gráfico de Barras de Volumen Vehicular -->
+      <div class="chart-container panel" style="margin-bottom: 24px; height: 350px;">
+        <h3 style="margin-bottom: 15px; color: var(--text-primary); text-align: center;">Comparativa de Flujos por Ruta (CA)</h3>
+        <canvas baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          [type]="barChartType">
+        </canvas>
+      </div>
+
       <div class="route-grid">
         <div class="route-item panel" *ngFor="let route of routeCatalog">
           <div class="route-head">
@@ -102,6 +112,15 @@
           <div class="total-badge">
             <span class="total-label">Total Nacional</span>
             <span class="total-value">6.57M</span>
+          </div>
+
+          <!-- NUEVO: Gráfico de Dona -->
+          <div style="margin-top: 30px; height: 250px;">
+            <canvas baseChart
+              [data]="doughnutChartData"
+              [options]="doughnutChartOptions"
+              [type]="doughnutChartType">
+            </canvas>
           </div>
         </aside>
 
