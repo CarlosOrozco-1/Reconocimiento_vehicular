@@ -17,7 +17,8 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 400px;
+  /* ANCHO DEL PANEL: Modifica este valor (ej. 320px o 400px) para hacer el panel más angosto o más ancho */
+  width: 330px; 
   height: 100%;
   max-height: 100%;
   z-index: 1000;
@@ -25,7 +26,8 @@
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  background: rgba(11, 15, 25, 0.95);
+  /* TRANSPARENCIA DEL FONDO: El último valor (0.80) indica la opacidad. 1 es sólido, 0.5 es medio transparente. */
+  background: rgba(11, 15, 25, 0.80);
   backdrop-filter: blur(16px);
   border-left: 1px solid var(--panel-border);
   box-shadow: -10px 0 32px rgba(0, 0, 0, 0.5);
