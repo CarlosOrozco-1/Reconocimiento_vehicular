@@ -1,0 +1,75 @@
+<div class="map-view-container animate-in">
+  <!-- Sidebar Flotante -->
+  <aside class="map-sidebar panel" [class.collapsed]="!selectedRoute && showOnlySelectedRoute">
+    <div class="sidebar-inner">
+      
+      <!-- Header -->
+      <div class="sidebar-header" *ngIf="selectedRoute; else noSelectionHeader">
+        <div class="header-main">
+          <span class="badge-route">{{ selectedRoute }}</span>
+          <button class="icon-btn-close" (click)="clearSelection()" title="Cerrar">✕</button>
+        </div>
+        <h2 class="route-title">{{ selectedRouteName }}</h2>
+      </div>
+      
+      <ng-template #noSelectionHeader>
+        <div class="sidebar-header">
+          <h2 class="route-title">Red Vial Nacional</h2>
+          <p class="subtitle">Selecciona una ruta para el análisis avanzado.</p>
+        </div>
+      </ng-template>
+
+      <!-- Filtros Rápidos -->
+      <div class="quick-filters">
+        <button class="filter-chip" [class.active]="!showOnlySelectedRoute" (click)="showOnlySelectedRoute = false">Todas</button>
+        <button class="filter-chip" [class.active]="showOnlySelectedRoute" (click)="showOnlySelectedRoute = true">Aisladas</button>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="stats-container" *ngIf="selectedRouteSummary; else catalogTpl">
+        <div class="stat-group">
+          <div class="stat-mini-card">
+            <span class="label">FLUJO NORMAL</span>
+            <span class="value">{{ $any(selectedRouteSummary)['normal_flow'] | number }} <small>veh/h</small></span>
+          </div>
+          <div class="stat-mini-card peak">
+            <span class="label">HORA PICO</span>
+            <span class="value">{{ $any(selectedRouteSummary)['peak_flow'] | number }} <small>veh/h</small></span>
+          </div>
+        </div>
+
+        <div class="info-row" *ngIf="selectedDepartments.length > 0">
+          <span class="info-label">Cruza por:</span>
+          <div class="dept-tags">
+            <span class="dept-tag" *ngFor="let d of selectedDepartments">{{ d }}</span>
+          </div>
+        </div>
+
+        <div class="chart-wrapper">
+          <h4 class="chart-title">Curva de Tráfico (Promedio 24h)</h4>
+          <div class="canvas-container">
+            <canvas id="trafficCurveChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catálogo de Rutas -->
+      <ng-template #catalogTpl>
+        <div class="route-list">
+          <button *ngFor="let route of routeCatalog" 
+                  class="route-item" 
+                  (click)="onRouteClick(strConv($any(route)['route_code'] ?? ''), strConv($any(route)['name'] ?? ''))">
+            <div class="ri-left">
+              <span class="ri-code">{{ route['route_code'] }}</span>
+              <span class="ri-name">{{ route['name'] }}</span>
+            </div>
+            <span class="ri-km">{{ route['length_km'] }} km</span>
+          </button>
+        </div>
+      </ng-template>
+    </div>
+  </aside>
+
+  <!-- Contenedor del Mapa Leaflet -->
+  <div id="main-map" class="leaflet-map"></div>
+</div>

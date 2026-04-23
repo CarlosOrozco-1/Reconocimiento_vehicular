@@ -224,3 +224,20 @@ def fetch_peak_hours(from_date: date | None, to_date: date | None) -> list[dict]
             cur.execute(query, params)
             rows = cur.fetchall()
     return rows
+
+
+def fetch_vehicle_mix() -> list[dict]:
+    """
+    Retorna las estadisticas del parque vehicular nacional (SAT/INE).
+    Datos cargados desde el archivo masivo de 6.5M de vehiculos.
+    """
+    query = """
+        SELECT vehicle_type, vehicle_count, percentage
+        FROM vehicle_type_mix
+        ORDER BY vehicle_count DESC
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            rows = cur.fetchall()
+    return rows

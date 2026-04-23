@@ -65,4 +65,11 @@ export class TrafficApiService {
     if (params.length) url += `?${params.join('&')}`;
     return this.http.get<{ source: string; data: Array<Record<string, unknown>> }>(url);
   }
+
+  /** Estadisticas reales del parque vehicular de Guatemala (SAT/INE) */
+  getVehicleMix(): Observable<{ source: string; data: Array<Record<string, any>> }> {
+    return this.http.get<{ source: string; data: Array<Record<string, any>> }>(
+      `${this.baseUrl}/vehicle-mix`
+    );
+  }
 }

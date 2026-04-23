@@ -20,6 +20,8 @@ class Settings:
     postgres_user: str = os.getenv("POSTGRES_USER", "traffic_user")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD", "traffic_pass")
 
+    tomtom_api_key: str = os.getenv("TOMTOM_API_KEY", "")
+
     @property
     def dsn(self) -> str:
         """Cadena de conexion DSN para psycopg."""

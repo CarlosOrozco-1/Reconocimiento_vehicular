@@ -22,6 +22,7 @@ from src.api.repository import (
     fetch_route_departments,
     fetch_route_summary,
     fetch_routes_geojson,
+    fetch_vehicle_mix,
 )
 from src.api.settings import settings
 
@@ -138,3 +139,46 @@ def get_route_summary(route_code: str) -> dict:
         if not settings.api_allow_mock:
             raise
         return {"source": "mock", "data": mock_route_summary(route_code=route_code)}
+
+
+@app.get("/sandbox/tomtom-flow")
+def sandbox_tomtom_flow(lat: float, lon: float) -> dict:
+    """
+    Endpoint de Sandbox: Consulta la API de TomTom Traffic Flow para una coordenada.
+    Retorna los datos en crudo para validacion en el frontend.
+    """
+    from src.api.tomtom_client import get_flow_segment_data
+    return get_flow_segment_data(lat, lon)
+
+
+@app.get("/peak-hours")
+def get_peak_hours(
+    from_date: date | None = Query(None), to_date: date | None = Query(None)
+):
+    """Hora pico por ruta basada en promedios historicos."""
+    try:
+        data = fetch_peak_hours(from_date, to_date)
+        return {"source": "db", "data": data}
+    except Exception:
+        if not settings.api_allow_mock:
+            raise
+        return {"source": "mock", "data": mock_peak_hours()}
+
+
+@app.get("/vehicle-mix")
+def get_vehicle_mix():
+    """Estadisticas reales del parque vehicular de Guatemala (SAT/INE)."""
+    try:
+        data = fetch_vehicle_mix()
+        return {"source": "db", "data": data}
+    except Exception:
+        if not settings.api_allow_mock:
+            raise
+        return {
+            "source": "mock",
+            "data": [
+                {"vehicle_type": "MOTO", "vehicle_count": 2500000, "percentage": 45.0},
+                {"vehicle_type": "AUTOMOVIL", "vehicle_count": 2000000, "percentage": 36.0},
+                {"vehicle_type": "PICK UP", "vehicle_count": 1000000, "percentage": 18.0},
+            ],
+        }

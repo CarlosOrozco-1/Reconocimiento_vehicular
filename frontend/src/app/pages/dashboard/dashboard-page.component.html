@@ -1,0 +1,143 @@
+<div class="dashboard-wrapper animate-in">
+  <header class="page-header">
+    <h1 class="glow-text">Análisis de Circulación</h1>
+    <p class="subtitle">Inteligencia de Datos y Parque Vehicular Nacional</p>
+  </header>
+
+  <!-- Stepper Nav -->
+  <nav class="stepper">
+    <button [class.active]="currentStep === 0" (click)="setStep(0)">
+      <span class="dot"></span> Red Nacional
+    </button>
+    <button [class.active]="currentStep === 1" (click)="setStep(1)">
+      <span class="dot"></span> Comportamiento Crítico
+    </button>
+    <button [class.active]="currentStep === 2" (click)="setStep(2)">
+      <span class="dot"></span> Censo Vehicular (SAT)
+    </button>
+  </nav>
+
+  <div class="step-viewport" [ngSwitch]="currentStep">
+    
+    <!-- STEP 0: Red Vial -->
+    <div *ngSwitchCase="0" class="step-panel fade-in">
+      <div class="stats-grid">
+        <div class="stat-card panel">
+          <div class="stat-icon">🛣️</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ routeCatalog.length }}</span>
+            <span class="stat-label">Rutas Principales</span>
+          </div>
+        </div>
+        <div class="stat-card panel">
+          <div class="stat-icon">📏</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ totalKm | number }}</span>
+            <span class="stat-label">Kilómetros Mapeados</span>
+          </div>
+        </div>
+        <div class="stat-card panel" [class.live]="dbConnected">
+          <div class="stat-icon">{{ dbConnected ? '⚡' : '🔌' }}</div>
+          <div class="stat-info">
+            <span class="stat-number">{{ dbConnected ? 'Sincronizado' : 'Offline' }}</span>
+            <span class="stat-label">Estado de Base de Datos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="route-grid">
+        <div class="route-item panel" *ngFor="let route of routeCatalog">
+          <div class="route-head">
+            <span class="r-code">{{ route['route_code'] }}</span>
+            <span class="r-km">{{ route['length_km'] }} km</span>
+          </div>
+          <div class="r-name">{{ route['name'] }}</div>
+          <div class="r-meta">{{ route['segment_count'] }} tramos registrados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Horas Pico -->
+    <div *ngSwitchCase="1" class="step-panel fade-in">
+      <div class="table-card panel">
+        <header class="card-header">
+          <h3>Distribución de Horas Críticas</h3>
+          <p>Basado en el histórico de flujos horarios</p>
+        </header>
+        <table class="premium-table">
+          <thead>
+            <tr>
+              <th>Identificador</th>
+              <th>Denominación de Ruta</th>
+              <th>Hora Pico</th>
+              <th>Flujo Estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of peakHours">
+              <td><span class="tag-code">{{ row['route_code'] }}</span></td>
+              <td class="bold">{{ row['route_name'] }}</td>
+              <td><span class="peak-pill">{{ row['peak_hour'] }}:00 h</span></td>
+              <td class="accent">{{ row['avg_flow'] | number }} veh/h</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STEP 2: SAT -->
+    <div *ngSwitchCase="2" class="step-panel fade-in">
+      <div class="fleet-layout">
+        <aside class="fleet-controls panel">
+          <h3>Filtros de Inventario</h3>
+          <div class="filter-group">
+            <label>Tipo de Vehículo</label>
+            <select (change)="onFilterChange($event)">
+              <option value="">Todos los tipos</option>
+              <option *ngFor="let v of vehicleMix.slice(0, 20)" [value]="v['vehicle_type']">
+                {{ v['vehicle_type'] }}
+              </option>
+            </select>
+          </div>
+          <div class="total-badge">
+            <span class="total-label">Total Nacional</span>
+            <span class="total-value">6.57M</span>
+          </div>
+        </aside>
+
+        <main class="fleet-content">
+          <!-- CORRECCIÓN: Usamos stats-grid para alinear igual que en el paso 1 -->
+          <div class="stats-grid">
+            <div class="stat-card panel" *ngFor="let item of filteredVehicleMix.slice(0, 3)">
+              <div class="stat-info">
+                <span class="stat-number">{{ item['percentage'] }}%</span>
+                <span class="stat-label">{{ item['vehicle_type'] }}</span>
+                <span class="sub">{{ item['vehicle_count'] | number }} unidades</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-card panel mt-20">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Conteo SAT</th>
+                  <th>Representación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of filteredVehicleMix">
+                  <td class="bold">{{ item['vehicle_type'] }}</td>
+                  <td>{{ item['vehicle_count'] | number }}</td>
+                  <td class="accent-success">{{ item['percentage'] }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,73 @@
+<div class="sandbox-container">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>TomTom API Sandbox</h2>
+      <p>Entorno aislado para probar datos de tráfico en vivo.</p>
+    </div>
+
+    <div class="controls-section">
+      <h3>Visualización en Mapa</h3>
+      <p class="description">Superponer la capa raster de tráfico en vivo de TomTom.</p>
+      <label class="switch-container">
+        <input type="checkbox" [checked]="isTrafficLayerActive" (change)="toggleTrafficLayer()">
+        <span class="slider round"></span>
+        <span class="switch-label">Ver Tráfico en Vivo (Capa TomTom)</span>
+      </label>
+    </div>
+
+    <div class="controls-section">
+      <h3>Prueba de Datos (Backend)</h3>
+      <p class="description">Haz clic en cualquier calle del mapa para consultar la velocidad en vivo.</p>
+      <button class="btn-primary" (click)="fetchTomTomData()" [disabled]="isLoading" style="margin-bottom: 10px;">
+        {{ isLoading ? 'Consultando...' : 'Consultar Centro (GT)' }}
+      </button>
+      <button class="btn-primary" (click)="jumpToCA2()" [disabled]="isLoading" style="margin-bottom: 10px; background-color: #059669; border: none; width: 100%;">
+        Probar CA-2 (Frontera)
+      </button>
+      <button class="btn-secondary" (click)="jumpToMexicoCity()" [disabled]="isLoading" style="background-color: #475569; width: 100%; border: none; color: white; padding: 10px; border-radius: 6px; cursor: pointer;">
+        Probar Ciudad de México
+      </button>
+    </div>
+
+    <div class="results-section">
+      <h3>Respuesta de TomTom:</h3>
+      <div *ngIf="isLoading" class="loader">Cargando...</div>
+      
+      <div *ngIf="errorMsg" class="error-box">
+        {{ errorMsg }}
+      </div>
+
+      <div *ngIf="apiResponse && apiResponse.flowSegmentData && !isLoading" class="metrics-container">
+        <div class="metric-card">
+          <span class="metric-label">Velocidad Actual</span>
+          <span class="metric-value" [ngClass]="{'good': (apiResponse.flowSegmentData.currentSpeed / apiResponse.flowSegmentData.freeFlowSpeed) >= 0.8, 'warning': (apiResponse.flowSegmentData.currentSpeed / apiResponse.flowSegmentData.freeFlowSpeed) >= 0.5 && (apiResponse.flowSegmentData.currentSpeed / apiResponse.flowSegmentData.freeFlowSpeed) < 0.8, 'danger': (apiResponse.flowSegmentData.currentSpeed / apiResponse.flowSegmentData.freeFlowSpeed) < 0.5}">
+            {{ apiResponse.flowSegmentData.currentSpeed }} <small>km/h</small>
+          </span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Velocidad sin Tráfico</span>
+          <span class="metric-value">{{ apiResponse.flowSegmentData.freeFlowSpeed }} <small>km/h</small></span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Tiempo de Viaje</span>
+          <span class="metric-value">{{ apiResponse.flowSegmentData.currentTravelTime }} <small>seg</small></span>
+        </div>
+      </div>
+
+      <!-- Mantener el JSON por si quieren ver la data cruda, pero más pequeño -->
+      <details *ngIf="apiResponse && !isLoading" style="margin-top: 15px;">
+        <summary style="color: var(--text-secondary); cursor: pointer; font-size: 0.85rem;">Ver JSON Crudo</summary>
+        <pre class="json-viewer" style="margin-top: 10px;">{{ apiResponse | json }}</pre>
+      </details>
+      
+      <div *ngIf="!apiResponse && !isLoading && !errorMsg" class="empty-state">
+        Esperando interacción...
+      </div>
+    </div>
+  </div>
+
+  <div class="map-wrapper">
+    <div id="sandbox-map" class="leaflet-map"></div>
+    <div class="map-instruction">Haz clic en una calle para consultar su velocidad en vivo.</div>
+  </div>
+</div>

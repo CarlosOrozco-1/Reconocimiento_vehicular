@@ -8,9 +8,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   template: `
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand">Traffic Map Guatemala</div>
-        <a class="nav-link" routerLink="/map" routerLinkActive="active">Mapa</a>
-        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <div class="brand">
+          <span style="font-size: 2rem;" title="Traffic GT">🛣️</span>
+        </div>
+        <nav class="nav-links">
+          <a class="nav-link" routerLink="/map" routerLinkActive="active">Mapa</a>
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Datos</a>
+          <a class="nav-link" routerLink="/sandbox" routerLinkActive="active">Sandbox</a>
+        </nav>
       </header>
       <main class="page">
         <router-outlet />
